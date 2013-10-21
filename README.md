@@ -5,7 +5,7 @@ socks-factory is a full implementation of the SOCKS 4, 4a, and 5 protocols in an
 
 ### Why socks-factory?
 
-As of this moment, there is not one other SOCKS proxy library on npm that supports all three varients of the SOCKS protocol. Nor are there any that support the BIND and associate features that some versions of the SOCKS protocol supports.
+As of this moment, there is not one other SOCKS proxy library on npm that supports all three variants of the SOCKS protocol. Nor are there any that support the BIND and associate features that some versions of the SOCKS protocol supports.
 
 Key Features:
 * Supports SOCKS 4, 4a, and 5 protocols
@@ -60,7 +60,7 @@ SocksFactory.createConnection(options, function(err, socket, info) {
 
 ### BIND Example:
 
-When sending the BIND command to a SOCKS proxy server, this will cause the proxy server to open up a new tcp port. Once this port is open, you,another client, application, etc, can then connect to the SOCKS proxy on that tcp port and communcations will be forwarded to each connection through the proxy itself.
+When sending the BIND command to a SOCKS proxy server, this will cause the proxy server to open up a new tcp port. Once this port is open, you, another client, application, etc, can then connect to the SOCKS proxy on that tcp port and communications will be forwarded to each connection through the proxy itself.
 
 ```javascript
 var options = {
@@ -280,7 +280,7 @@ function(err, socket, info) {
 
 Creates a UDP packet frame for using with UDP association relays.
 
-returns `Buffer` The completed UDP packet container to be sent to the proxy for fowarding.
+returns `Buffer` The completed UDP packet container to be sent to the proxy for forwarding.
 
 target:
 ```javascript
