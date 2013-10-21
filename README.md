@@ -151,6 +151,7 @@ var options = {
     target: {
         // When using associate, either set the ip and port to 0.0.0.0:0 or the expected source of incoming udp packets.
         // Note: Some SOCKS servers MAY block associate requests with 0.0.0.0:0 endpoints.
+        // Note: ipv4, ipv6, and hostnames are supported here.
         host: "0.0.0.0",
         port: 0
     }
@@ -192,7 +193,8 @@ Now assuming that the associate request went through correctly. Anything that is
 There are only two exported functions that you will ever need to use.
 
 ###SocksFactory.createConnection( options, callback(err, socket, info)  )
-
+> `Object` **Object containing options to use when creating this connection**
+> `function` **Callback that is called when connection completes or errors**
 Options:
 
 ```javascript
@@ -237,7 +239,7 @@ var options = {
     target: {
         // When using 'connect':    IP Address or hostname (4a and 5 only) of a target to connect to.
         // When using 'bind':       IP Address of the expected client that will connect to the newly open tcp port.
-        // When using 'associate':  IP Address and Port of the expected client that will send UDP packets to this UDP association.
+        // When using 'associate':  IP Address and Port of the expected client that will send UDP packets to this UDP association relay.
         
         // Note:
         // When using SOCKS 4, only an ipv4 address can be used.
@@ -268,6 +270,28 @@ function(err, socket, info) {
 ```
 
 ###SocksFactory.createUDPFrame( target, data, [frame] )
+> `Object` **Target host object containing destination for UDP packet**
+> `Buffer` **Data Buffer to send in the UDP packet**
+> `Number` **Frame number in UDP packet. (defaults to 0)**
+
+returns `Buffer` The completed UDP packet container to be sent to the proxy for fowarding.
+
+Creates a UDP packet frame for using with UDP association relays.
+
+target:
+```javascript
+
+// Target host information for where the UDP packet should be sent.
+var target =
+    {
+        // ipv4, ipv6, or hostname for where to have the proxy send the UDP packet.
+        host: "1.2.3.4",
+
+        // udpport for where to send the UDP packet.
+        port: 2323
+    }
+
+```
 
 
 # Further Reading:
