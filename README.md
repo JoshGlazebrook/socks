@@ -194,7 +194,9 @@ There are only two exported functions that you will ever need to use.
 
 ###SocksFactory.createConnection( options, callback(err, socket, info)  )
 > `Object` **Object containing options to use when creating this connection**
+
 > `function` **Callback that is called when connection completes or errors**
+
 Options:
 
 ```javascript
@@ -271,12 +273,14 @@ function(err, socket, info) {
 
 ###SocksFactory.createUDPFrame( target, data, [frame] )
 > `Object` **Target host object containing destination for UDP packet**
+
 > `Buffer` **Data Buffer to send in the UDP packet**
+
 > `Number` **Frame number in UDP packet. (defaults to 0)**
 
-returns `Buffer` The completed UDP packet container to be sent to the proxy for fowarding.
-
 Creates a UDP packet frame for using with UDP association relays.
+
+returns `Buffer` The completed UDP packet container to be sent to the proxy for fowarding.
 
 target:
 ```javascript
