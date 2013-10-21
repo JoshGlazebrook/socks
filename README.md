@@ -49,7 +49,7 @@ SocksFactory.createConnection(options, function(err, socket, info) {
             console.log(data);
         });
         
-        // Remember to resume the stream.
+        // PLEASE NOTE: sockets need to be resumed before any data will come in or out as they are paused right before this callback is fired.
         socket.resume();
         
         // 569
@@ -91,7 +91,7 @@ SocksFactory.createConnection(options, function(err, socket, info) {
             console.log(data);
         });
 
-        // Remember to resume the stream.
+        // Remember to resume the socket stream.
         socket.resume();
     }
 });
