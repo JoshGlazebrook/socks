@@ -138,7 +138,6 @@ As you can see the data entered in the telnet terminal is routed through the SOC
 This piece of data is technically part of the SOCKS BIND specifications, but because of my design decisions that were made in an effort to keep this library simple to use, you will need to make sure to ignore and/or deal with this initial packet that is received when a connection is made to the newly opened port.
 
 ### Associate Example:
-
 The associate command sets up a UDP relay for the remote SOCKS proxy server to relay UDP packets to the remote host of your choice.
 
 ```javascript
@@ -151,7 +150,7 @@ var options = {
     },
     target: {
         // When using associate, either set the ip and port to 0.0.0.0:0 or the expected source of incoming udp packets.
-        // Note: Some SOCKS server MAY block associate requests with 0.0.0.0:0 endpoints.
+        // Note: Some SOCKS servers MAY block associate requests with 0.0.0.0:0 endpoints.
         host: "0.0.0.0",
         port: 0
     }
@@ -165,23 +164,28 @@ SocksFactory.createConnection(options, function(err, socket, info) {
         // Associate request has completed.
         // info object contains the remote ip and udp port to send UDP packets to.
         console.log(info);
-
         // { port: 42803, host: '202.101.228.108' }
+
         var udp = new dgram.Socket('udp4');
 
-        // In this example we are just sending anything from the stdin.
-        process.stdin.on('data', function(data) {
-            // Create UDP Packet (target object is where you want the proxy to send the udp packet)
-            var pack = SocksFactory.createUDPFrame({ host: "1.2.3.4", port: 1028}, new Buffer(data));
+        // In this example we are going to send "Hello" to 1.2.3.4:2323 through the SOCKS proxy.
 
-            // Send Packet to Proxy UDP endpoint given in the info object.
-            udp.send(pack, 0, pack.length, info.port, info.host);
-        });
+        var pack = SocksFactory.createUDPFrame({ host: "1.2.3.4", port: 2323}, new Buffer("hello"));
+
+        // Send Packet to Proxy UDP endpoint given in the info object.
+        udp.send(pack, 0, pack.length, info.port, info.host);
     }
 });
 
-
 ```
+Now assuming that the associate request went through correctly. Anything that is typed in the stdin will first be sent to the SOCKS proxy on the endpoint that was provided in the info object. Once the SOCKS proxy receives it, it will then forward on the actual UDP packet to the host you you wanted.
+
+
+1.2.3.4:2323 should now receive our relayed UDP packet from 202.101.228.108 (SOCKS proxy)
+```
+// <Buffer 68 65 6c 6c 6f>
+```
+
 
 # Api Reference:
 

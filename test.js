@@ -26,12 +26,9 @@ SocksFactory.createConnection(options, function(err, socket, info) {
         // { port: 1494, host: '202.101.228.108' }
         var udp = new dgram.Socket('udp4');
 
-        //process.stdin.resume();
-        process.stdin.on('data', function(data) {
-            // Create UDP Packet
-            var pack = SocksFactory.createUDPFrame({ host: "127.0.0.1", port: 6699}, new Buffer(data));
+        var pack = SocksFactory.createUDPFrame({ host: "127.0.0.1", port: 6699}, new Buffer("Hello"));
 
-            udp.send(pack, 0, pack.length, info.port, info.host);
-        });
+        udp.send(pack, 0, pack.length, info.port, info.host);
+
     }
 });
