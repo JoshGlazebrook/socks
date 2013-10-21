@@ -1,18 +1,18 @@
 socks-factory
 =============
 
-socks-factory is a full implementation of the Socks 4, 4a, and 5 protocols in an easy to use node.js module.
+socks-factory is a full implementation of the SOCKS 4, 4a, and 5 protocols in an easy to use node.js module.
 
 ### Why socks-factory?
 
-As of this moment, there is not one other Socks proxy library on npm that supports all three varients of the Socks protocol. Nor are there any that support the BIND and associate features that some versions of the Socks protocol supports.
+As of this moment, there is not one other SOCKS proxy library on npm that supports all three varients of the SOCKS protocol. Nor are there any that support the BIND and associate features that some versions of the SOCKS protocol supports.
 
 Key Features:
-* Supports Socks 4, 4a, and 5 protocols
-* Supports the connect method (simple tcp connections of Socks)  (Client -> Socks Server -> Target Server)
+* Supports SOCKS 4, 4a, and 5 protocols
+* Supports the connect method (simple tcp connections of SOCKS)  (Client -> SOCKS Server -> Target Server)
 * Supports the BIND method (4, 4a, 5)
 * Supports the associate (UDP forwarding) method (5)
-* Simple and easy to use (one function call to make any type of socks connection)
+* Simple and easy to use (one function call to make any type of SOCKS connection)
  
 ## Installing:
 
@@ -23,7 +23,7 @@ Key Features:
 For this example, say you wanted to grab the html of google's home page.
 
 ```javascript
-var SocksFactory = require('socks-factory');
+var SocksFactory = require('sock-factory');
 
 var options = {
     proxy: {
@@ -60,7 +60,7 @@ SocksFactory.createConnection(options, function(err, socket, info) {
 
 ### BIND Example:
 
-When sending the BIND command to a Socks proxy server, this will cause the proxy server to open up a new tcp port. Once this port is open you, or another client, application, or person can then connect to the socks proxy on that tcp port and communcations will be forwarded to each connection through the proxy itself.
+When sending the BIND command to a SOCKS proxy server, this will cause the proxy server to open up a new tcp port. Once this port is open you, or another client, application, or person can then connect to the SOCKS proxy on that tcp port and communcations will be forwarded to each connection through the proxy itself.
 
 ```javascript
 var options = {
@@ -110,7 +110,7 @@ Joshs-MacBook-Pro:~ Josh$ telnet 202.101.228.108 1494
  aaaaaaaaa
 ```
 
-Note that this connection to the newly bound port does not need to go through the Socks handshake.
+Note that this connection to the newly bound port does not need to go through the SOCKS handshake.
 
 Back at our original connection we see that we have received some new data:
 
@@ -125,7 +125,7 @@ Back at our original connection we see that we have received some new data:
 <Buffer 61 61 61 61 61 61 61 61 61 0d 0a> // aaaaaaaaa <\r\n (enter key)>
 ```
 
-As you can see the data entered in the telnet terminal is routed through the Socks proxy and back to the original connection that was made to the proxy.
+As you can see the data entered in the telnet terminal is routed through the SOCKS proxy and back to the original connection that was made to the proxy.
 
 **Note** Please pay close attention to the first piece of data that was received. 
 
@@ -135,7 +135,7 @@ As you can see the data entered in the telnet terminal is routed through the Soc
         [005a] [PORT:2} [IP:4]
 ```
 
-This piece of data is technically part of the Socks BIND specifications, but because of my design decisions that were made in an effort to keep this library simple to use, you will need to make sure to ignore and/or deal with this initial packet that is received when a connection is made to the newly opened port.
+This piece of data is technically part of the SOCKS BIND specifications, but because of my design decisions that were made in an effort to keep this library simple to use, you will need to make sure to ignore and/or deal with this initial packet that is received when a connection is made to the newly opened port.
 
 ### Associate Example:
 
@@ -164,23 +164,23 @@ var options = {
         // Note: 4 works for both 4 and 4a.
         type: 4,
 
-        // Socks Connection Type (Optional)
+        // SOCKS Connection Type (Optional)
         // - defaults to 'connect'
 
-        // 'connect'    - establishes a regular Socks connection to the target host. 
-        // 'bind'       - establishes an open tcp port on the Socks for another client to connect to.
-        // 'associate'  - establishes a udp association relay on the Socks server.
+        // 'connect'    - establishes a regular SOCKS connection to the target host. 
+        // 'bind'       - establishes an open tcp port on the SOCKS for another client to connect to.
+        // 'associate'  - establishes a udp association relay on the SOCKS server.
         command: "connect",
 
 
-        // Socks 4 Specific:
+        // SOCKS 4 Specific:
 
-        // UserId used when making a Socks 4/4a request. (Optional)
+        // UserId used when making a SOCKS 4/4a request. (Optional)
         userid: "someuserid",
 
-        // Socks 5 Specific:
+        // SOCKS 5 Specific:
 
-        // Authentication used for Socks 5 (when it's required) (Optional)
+        // Authentication used for SOCKS 5 (when it's required) (Optional)
         authentication: {
             username: "Josh",
             password: "somepassword"
@@ -194,9 +194,9 @@ var options = {
         // When using 'associate':  IP Address and Port of the expected client that will send UDP packets to this UDP association.
         
         // Note:
-        // When using Socks 4, only an ipv4 address can be used.
-        // When using Socks 4a, an ipv4 address OR a hostname can be used.
-        // When using Socks 5, ipv4, ipv6, or a hostname can be used.
+        // When using SOCKS 4, only an ipv4 address can be used.
+        // When using SOCKS 4a, an ipv4 address OR a hostname can be used.
+        // When using SOCKS 5, ipv4, ipv6, or a hostname can be used.
         host: "1.2.3.4",
 
         // TCP port of target to connect to.
@@ -222,7 +222,7 @@ function(err, socket, info) {
 ```
 
 # Further Reading:
-Please read the Socks 5 specifications for more information on how to use BIND and Associate. 
+Please read the SOCKS 5 specifications for more information on how to use BIND and Associate. 
 http://www.ietf.org/rfc/rfc1928.txt
 
 # License
