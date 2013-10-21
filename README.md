@@ -60,7 +60,7 @@ SocksFactory.createConnection(options, function(err, socket, info) {
 
 ### BIND Example:
 
-When sending the BIND command to a SOCKS proxy server, this will cause the proxy server to open up a new tcp port. Once this port is open you, or another client, application, or person can then connect to the SOCKS proxy on that tcp port and communcations will be forwarded to each connection through the proxy itself.
+When sending the BIND command to a SOCKS proxy server, this will cause the proxy server to open up a new tcp port. Once this port is open, you,another client, application, etc, can then connect to the SOCKS proxy on that tcp port and communcations will be forwarded to each connection through the proxy itself.
 
 ```javascript
 var options = {
