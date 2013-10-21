@@ -13,11 +13,18 @@ var options = {
     }
 };
 
-SocksFactory.createConnection(options, function(err, socket, info) {
+SocksFactory.createConnection(options, function (err, socket, info) {
     if (err)
         console.log(err);
     else {
         console.log("Connected");
+
+        socket.on('data', function (data) {
+            // do something with incoming data
+        });
+
+        // Please remember that sockets need to be resumed before any data will come in.
+        socket.resume();
 
         // We can do whatever we want with the socket now.
     }
