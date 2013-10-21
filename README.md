@@ -29,7 +29,7 @@ var options = {
     proxy: {
         ipaddress: "202.101.228.108", // Random public proxy
         port: 1080,
-        type: 4 // type is REQUIRED. Valid types: [4, 5]  (note 4 also works for 4a)
+        type: 5 // type is REQUIRED. Valid types: [4, 5]  (note 4 also works for 4a)
     },
     target: {
         host: "google.com", // can be an ip address of domain (4a and 5 only)
@@ -139,11 +139,53 @@ This piece of data is technically part of the SOCKS BIND specifications, but bec
 
 ### Associate Example:
 
-Please reference: http://www.ietf.org/rfc/rfc1928.txt
+The associate command sets up a UDP relay for the remote SOCKS proxy server to relay UDP packets to the remote host of your choice.
+
+```javascript
+var options = {
+    proxy: {
+        ipaddress: "202.101.228.108",
+        port: 1080,
+        type: 5,
+        command: "associate" // Since we are using associate, we must specify it here.
+    },
+    target: {
+        // When using associate, either set the ip and port to 0.0.0.0:0 or the expected source of incoming udp packets.
+        // Note: Some SOCKS server MAY block associate requests with 0.0.0.0:0 endpoints.
+        host: "0.0.0.0",
+        port: 0
+    }
+};
+
+
+SocksFactory.createConnection(options, function(err, socket, info) {
+    if (err)
+        console.log(err);
+    else {
+        // Associate request has completed.
+        // info object contains the remote ip and udp port to send UDP packets to.
+        console.log(info);
+
+        // { port: 42803, host: '202.101.228.108' }
+        var udp = new dgram.Socket('udp4');
+
+        // In this example we are just sending anything from the stdin.
+        process.stdin.on('data', function(data) {
+            // Create UDP Packet (target object is where you want the proxy to send the udp packet)
+            var pack = SocksFactory.createUDPFrame({ host: "1.2.3.4", port: 1028}, new Buffer(data));
+
+            // Send Packet to Proxy UDP endpoint given in the info object.
+            udp.send(pack, 0, pack.length, info.port, info.host);
+        });
+    }
+});
+
+
+```
 
 # Api Reference:
 
-There is only one exported function that you will ever need to use.
+There are only two exported functions that you will ever need to use.
 
 ###SocksFactory.createConnection( options, callback(err, socket, info)  )
 
@@ -220,6 +262,9 @@ function(err, socket, info) {
   // Hopefully no errors :-)
 }
 ```
+
+###SocksFactory.createUDPFrame( target, data, [frame] )
+
 
 # Further Reading:
 Please read the SOCKS 5 specifications for more information on how to use BIND and Associate. 
