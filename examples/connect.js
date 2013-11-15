@@ -2,9 +2,9 @@ var SocksFactory = require('../lib/socks-factory.js');
 
 var options = {
     proxy: {
-        ipaddress: "202.118.236.141",
+        ipaddress: "202.101.228.108",
         port: 1080,
-        type: 5  // (4 or 5)
+        type: 4  // (4 or 5)
     },
 
     target: {

@@ -29,7 +29,7 @@
   "license": "MIT",
   "dependencies": {
     "ip": "~0.1.0",
-    "smart-buffer": "~1.0.0",
+    "smart-buffer": "~1.0.1",
     "ipaddr.js": "~0.1.1"
   }
 }

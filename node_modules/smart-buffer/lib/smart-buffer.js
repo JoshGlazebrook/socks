@@ -153,13 +153,14 @@ var SmartBuffer = (function () {
      * @returns {string}
      */
     SmartBuffer.prototype.readStringNT = function (encoding) {
-        var nullpos = this.length - 1;
+        var nullpos = this.length;
         for (var i = this._readOffset; i < this.length; i++) {
             if (this.buff[i] == 0x00) {
                 nullpos = i;
                 break;
             }
         }
+
         var result = this.buff.slice(this._readOffset, nullpos);
         this._readOffset = nullpos + 1;
 

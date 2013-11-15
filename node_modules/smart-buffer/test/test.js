@@ -144,6 +144,29 @@ describe("Reading/Writing To/From SmartBuffer", function () {
         });
     });
 
+    describe("Null/non-null terminating strings", function () {
+        var reader = new SmartBuffer();
+        reader.writeString("hello\0test\0bleh");
+
+        it("should equal hello", function() {
+            assert.strictEqual(reader.readStringNT(), "hello");
+        });
+
+        it("should equal: test", function() {
+            assert.strictEqual(reader.readString(4), "test");
+        });
+
+        it("should have a length of zero", function() {
+            assert.strictEqual(reader.readStringNT().length, 0);
+        });
+
+        it("should equal: bleh", function () {
+            assert.strictEqual(reader.readStringNT(), "bleh");
+        });
+
+
+    });
+
     describe("Buffer Values", function () {
         var buff = new Buffer([0x01, 0x02, 0x04, 0x08, 0x16, 0x32, 0x64]);
         var reader = new SmartBuffer();
