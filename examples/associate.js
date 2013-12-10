@@ -1,4 +1,4 @@
-var SocksFactory = require('../lib/socks-factory.js');
+var SocksClient = require('../lib/socks-client.js');
 var dgram = require('dgram');
 
 var options = {
@@ -15,7 +15,7 @@ var options = {
     }
 };
 
-SocksFactory.createConnection(options, function(err, socket, info) {
+SocksClient.createConnection(options, function(err, socket, info) {
     if (err)
         console.log(err);
     else {
@@ -27,7 +27,7 @@ SocksFactory.createConnection(options, function(err, socket, info) {
         // { port: 4381, host: '202.101.228.108' }
 
         var udp = new dgram.Socket('udp4');
-        var packet = SocksFactory.createUDPFrame({ host: "1.2.3.4", port: 5454}, new Buffer("Hello"));
+        var packet = SocksClient.createUDPFrame({ host: "1.2.3.4", port: 5454}, new Buffer("Hello"));
         udp.send(packet, 0, packet.length, info.port, info.host);
     }
 });

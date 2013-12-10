@@ -1,25 +1,26 @@
 {
-  "name": "socks-factory",
-  "version": "1.0.5",
+  "name": "socks-client",
+  "version": "1.0.6",
   "description": "A SOCKS proxy client library supporting SOCKS 4, 4a, and 5. (also supports BIND/Associate)",
-  "main": "lib/socks-factory.js",
-  "homepage": "https://github.com/JoshGlazebrook/socks-factory",
+  "main": "lib/socks-client.js",
+  "homepage": "https://github.com/JoshGlazebrook/socks-client",
   "repository": {
     "type": "git",
-    "url": "https://github.com/JoshGlazebrook/socks-factory.git"
+    "url": "https://github.com/JoshGlazebrook/socks-client.git"
   },
   "bugs": {
-    "url": "https://github.com/JoshGlazebrook/socks-factory/issues"
+    "url": "https://github.com/JoshGlazebrook/socks-client/issues"
   },
   "keywords": [
     "socks",
     "proxy",
+    "client",
+    "tor",
     "bind",
     "associate",
     "socks 4",
     "socks 4a",
-    "socks 5",
-    "client"
+    "socks 5"
   ],
   "engines": {
     "node": ">= 0.10.0",

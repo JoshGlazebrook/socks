@@ -1,9 +1,9 @@
-socks-factory
+socks-client
 =============
 
-socks-factory is a full implementation of the SOCKS 4, 4a, and 5 protocols in an easy to use node.js module.
+socks-client is a full implementation of the SOCKS 4, 4a, and 5 protocols in an easy to use node.js module.
 
-### Why socks-factory?
+### Why socks-client?
 
 As of this moment, there is not one other SOCKS proxy library on npm that supports all three variants of the SOCKS protocol. Nor are there any that support the BIND and associate features that some versions of the SOCKS protocol supports.
 
@@ -13,17 +13,17 @@ Key Features:
 * Supports the BIND method (4, 4a, 5)
 * Supports the associate (UDP forwarding) method (5)
 * Simple and easy to use (one function call to make any type of SOCKS connection)
- 
+
 ## Installing:
 
-`npm install socks-factory`
+`npm install socks-client`
 
 ### Getting Started Example
 
 For this example, say you wanted to grab the html of google's home page.
 
 ```javascript
-var SocksFactory = require('sock-factory');
+var SocksClient = require('socks-client');
 
 var options = {
     proxy: {
@@ -38,7 +38,7 @@ var options = {
     command: 'connect'  // This defaults to connect, so it's optional if you're not using BIND or Associate.
 };
 
-SocksFactory.createConnection(options, function(err, socket, info) {
+SocksClient.createConnection(options, function(err, socket, info) {
     if (err)
         console.log(err);
     else {
@@ -48,10 +48,10 @@ SocksFactory.createConnection(options, function(err, socket, info) {
             console.log(data.length);
             console.log(data);
         });
-        
+
         // PLEASE NOTE: sockets need to be resumed before any data will come in or out as they are paused right before this callback is fired.
         socket.resume();
-        
+
         // 569
         // <Buffer 48 54 54 50 2f 31 2e 31 20 33 30 31 20 4d 6f 76 65 64 20 50 65...
     }
@@ -71,16 +71,16 @@ var options = {
         command: "bind" // Since we are using bind, we must specify it here.
     },
     target: {
-        host: "1.2.3.4", // When using bind, it's best to give an estimation of the ip that will be connecting to the newly opened tcp port on the proxy server. 
+        host: "1.2.3.4", // When using bind, it's best to give an estimation of the ip that will be connecting to the newly opened tcp port on the proxy server.
         port: 1080
     }
 };
 
-SocksFactory.createConnection(options, function(err, socket, info) {
+SocksClient.createConnection(options, function(err, socket, info) {
     if (err)
         console.log(err);
     else {
-        // BIND request has completed. 
+        // BIND request has completed.
         // info object contains the remote ip and newly opened tcp port to connect to.
         console.log(info);
 
@@ -127,7 +127,7 @@ Back at our original connection we see that we have received some new data:
 
 As you can see the data entered in the telnet terminal is routed through the SOCKS proxy and back to the original connection that was made to the proxy.
 
-**Note** Please pay close attention to the first piece of data that was received. 
+**Note** Please pay close attention to the first piece of data that was received.
 
 ```
 <Buffer 00 5a ca 61 43 a8 09 01>
@@ -158,7 +158,7 @@ var options = {
 };
 
 
-SocksFactory.createConnection(options, function(err, socket, info) {
+SocksClient.createConnection(options, function(err, socket, info) {
     if (err)
         console.log(err);
     else {
@@ -171,7 +171,7 @@ SocksFactory.createConnection(options, function(err, socket, info) {
 
         // In this example we are going to send "Hello" to 1.2.3.4:2323 through the SOCKS proxy.
 
-        var pack = SocksFactory.createUDPFrame({ host: "1.2.3.4", port: 2323}, new Buffer("hello"));
+        var pack = SocksClient.createUDPFrame({ host: "1.2.3.4", port: 2323}, new Buffer("hello"));
 
         // Send Packet to Proxy UDP endpoint given in the info object.
         udp.send(pack, 0, pack.length, info.port, info.host);
@@ -192,7 +192,7 @@ Now assuming that the associate request went through correctly. Anything that is
 
 There are only two exported functions that you will ever need to use.
 
-###SocksFactory.createConnection( options, callback(err, socket, info)  )
+###SocksClient.createConnection( options, callback(err, socket, info)  )
 > `Object` **Object containing options to use when creating this connection**
 
 > `function` **Callback that is called when connection completes or errors**
@@ -217,7 +217,7 @@ var options = {
         // SOCKS Connection Type (Optional)
         // - defaults to 'connect'
 
-        // 'connect'    - establishes a regular SOCKS connection to the target host. 
+        // 'connect'    - establishes a regular SOCKS connection to the target host.
         // 'bind'       - establishes an open tcp port on the SOCKS for another client to connect to.
         // 'associate'  - establishes a udp association relay on the SOCKS server.
         command: "connect",
@@ -242,7 +242,7 @@ var options = {
         // When using 'connect':    IP Address or hostname (4a and 5 only) of a target to connect to.
         // When using 'bind':       IP Address of the expected client that will connect to the newly open tcp port.
         // When using 'associate':  IP Address and Port of the expected client that will send UDP packets to this UDP association relay.
-        
+
         // Note:
         // When using SOCKS 4, only an ipv4 address can be used.
         // When using SOCKS 4a, an ipv4 address OR a hostname can be used.
@@ -271,7 +271,7 @@ function(err, socket, info) {
 }
 ```
 
-###SocksFactory.createUDPFrame( target, data, [frame] )
+###SocksClient.createUDPFrame( target, data, [frame] )
 > `Object` **Target host object containing destination for UDP packet**
 
 > `Buffer` **Data Buffer to send in the UDP packet**

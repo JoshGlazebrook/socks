@@ -1,4 +1,4 @@
-var SocksFactory = require('../lib/socks-factory.js');
+var SocksClient = require('../lib/socks-client.js');
 
 var options = {
     proxy: {
@@ -13,7 +13,7 @@ var options = {
     }
 };
 
-SocksFactory.createConnection(options, function (err, socket, info) {
+SocksClient.createConnection(options, function (err, socket, info) {
     if (err)
         console.log(err);
     else {
