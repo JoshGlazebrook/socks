@@ -187,10 +187,33 @@ Now assuming that the associate request went through correctly. Anything that is
 // <Buffer 68 65 6c 6c 6f>
 ```
 
+## Using socks-client as an HTTP Agent
+
+You can use SocksClient as a http agent which will relay all your http
+connections through the socks server.
+
+The object that `SocksClient.Agent` accepts is the same as `SocksClient.createConnection`, you don't need to set a target since you have to define it in `http.request` or `http.get` methods.
+
+The second argument is a boolean which indicates wether the remote endpoint requires TLS.
+
+```javascript
+var socksAgent = new SocksClient.Agent({
+    proxy: {
+        ipaddress: "202.101.228.108",
+        port: 1080,
+        type: 5,
+    },
+    true // we are connecting to a HTTPS server, false for HTTP server
+});
+
+http.get({ hostname: 'google.com', port: '443', agent: socksAgent}, function (res) {
+    // Connection header by default is keep-alive, we have to manually end the socket
+    socksAgent.encryptedProxy.end();
+});
 
 # Api Reference:
 
-There are only two exported functions that you will ever need to use.
+There are only three exported functions that you will ever need to use.
 
 ###SocksClient.createConnection( options, callback(err, socket, info)  )
 > `Object` **Object containing options to use when creating this connection**
@@ -297,9 +320,14 @@ var target =
 
 ```
 
+###SocksClient.Agent( options, tls)  )
+> `Object` **Object containing options to use when creating this connection (see above in createConnection)**
+
+> `boolean` **Boolean indicating if we upgrade the connection to TLS on the socks server**
+
 
 # Further Reading:
-Please read the SOCKS 5 specifications for more information on how to use BIND and Associate. 
+Please read the SOCKS 5 specifications for more information on how to use BIND and Associate.
 http://www.ietf.org/rfc/rfc1928.txt
 
 # License
