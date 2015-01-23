@@ -208,8 +208,7 @@ var socksAgent = new SocksClient.Agent({
 });
 
 http.get({ hostname: 'google.com', port: '443', agent: socksAgent}, function (res) {
-    // Connection header by default is keep-alive, we have to manually end the socket
-    socksAgent.encryptedProxy.end();
+    console.log(res.statusCode);
 });
 ```
 
