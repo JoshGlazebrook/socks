@@ -1,15 +1,14 @@
-## NOTICE
-As of February 26th, 2015, [socks-client](https://www.npmjs.com/package/socks-client) has been renamed to [socks](https://www.npmjs.com/package/socks). A deprecation message has been added to all versions of socks-client on NPM notifying users of this change. This package will remain up to avoid any potential issues with other packages using socks-client. All future updates will be published to the [socks](https://www.npmjs.com/package/socks) package in the future. Thank you.
-
-socks-client
+socks
 =============
 
-socks-client is a full implementation of the SOCKS 4, 4a, and 5 protocols in an easy to use node.js module.
+socks is a full client implementation of the SOCKS 4, 4a, and 5 protocols in an easy to use node.js module.
 
+### Notice
+As of February 26th, 2015, socks is the new home of the socks-client package.
 
-### Why socks-client?
+### Why socks?
 
-As of this moment, there is not one other SOCKS proxy library on npm that supports all three variants of the SOCKS protocol. Nor are there any that support the BIND and associate features that some versions of the SOCKS protocol supports.
+There is not any other SOCKS proxy client library on npm that supports all three variants of the SOCKS protocol. Nor are there any that support the BIND and associate features that some versions of the SOCKS protocol supports.
 
 Key Features:
 * Supports SOCKS 4, 4a, and 5 protocols
@@ -20,14 +19,14 @@ Key Features:
 
 ## Installing:
 
-`npm install socks-client`
+`npm install socks`
 
 ### Getting Started Example
 
 For this example, say you wanted to grab the html of google's home page.
 
 ```javascript
-var SocksClient = require('socks-client');
+var Socks = require('socks');
 
 var options = {
     proxy: {
@@ -42,7 +41,7 @@ var options = {
     command: 'connect'  // This defaults to connect, so it's optional if you're not using BIND or Associate.
 };
 
-SocksClient.createConnection(options, function(err, socket, info) {
+Socks.createConnection(options, function(err, socket, info) {
     if (err)
         console.log(err);
     else {
@@ -80,7 +79,7 @@ var options = {
     }
 };
 
-SocksClient.createConnection(options, function(err, socket, info) {
+Socks.createConnection(options, function(err, socket, info) {
     if (err)
         console.log(err);
     else {
@@ -162,7 +161,7 @@ var options = {
 };
 
 
-SocksClient.createConnection(options, function(err, socket, info) {
+Socks.createConnection(options, function(err, socket, info) {
     if (err)
         console.log(err);
     else {
@@ -175,7 +174,7 @@ SocksClient.createConnection(options, function(err, socket, info) {
 
         // In this example we are going to send "Hello" to 1.2.3.4:2323 through the SOCKS proxy.
 
-        var pack = SocksClient.createUDPFrame({ host: "1.2.3.4", port: 2323}, new Buffer("hello"));
+        var pack = Socks.createUDPFrame({ host: "1.2.3.4", port: 2323}, new Buffer("hello"));
 
         // Send Packet to Proxy UDP endpoint given in the info object.
         udp.send(pack, 0, pack.length, info.port, info.host);
@@ -191,17 +190,17 @@ Now assuming that the associate request went through correctly. Anything that is
 // <Buffer 68 65 6c 6c 6f>
 ```
 
-## Using socks-client as an HTTP Agent
+## Using socks as an HTTP Agent
 
-You can use SocksClient as a http agent which will relay all your http
+You can use socks as a http agent which will relay all your http
 connections through the socks server.
 
-The object that `SocksClient.Agent` accepts is the same as `SocksClient.createConnection`, you don't need to set a target since you have to define it in `http.request` or `http.get` methods.
+The object that `Socks.Agent` accepts is the same as `Socks.createConnection`, you don't need to set a target since you have to define it in `http.request` or `http.get` methods.
 
-The second argument is a boolean which indicates wether the remote endpoint requires TLS.
+The second argument is a boolean which indicates whether the remote endpoint requires TLS.
 
 ```javascript
-var socksAgent = new SocksClient.Agent({
+var socksAgent = new Socks.Agent({
     proxy: {
         ipaddress: "202.101.228.108",
         port: 1080,
@@ -221,7 +220,7 @@ http.get({ hostname: 'google.com', port: '443', agent: socksAgent}, function (re
 
 There are only three exported functions that you will ever need to use.
 
-###SocksClient.createConnection( options, callback(err, socket, info)  )
+###Socks.createConnection( options, callback(err, socket, info)  )
 > `Object` **Object containing options to use when creating this connection**
 
 > `function` **Callback that is called when connection completes or errors**
@@ -300,7 +299,7 @@ function(err, socket, info) {
 }
 ```
 
-###SocksClient.createUDPFrame( target, data, [frame] )
+###Socks.createUDPFrame( target, data, [frame] )
 > `Object` **Target host object containing destination for UDP packet**
 
 > `Buffer` **Data Buffer to send in the UDP packet**
@@ -326,7 +325,7 @@ var target =
 
 ```
 
-###SocksClient.Agent( options, tls)  )
+###Socks.Agent( options, tls)  )
 > `Object` **Object containing options to use when creating this connection (see above in createConnection)**
 
 > `boolean` **Boolean indicating if we upgrade the connection to TLS on the socks server**

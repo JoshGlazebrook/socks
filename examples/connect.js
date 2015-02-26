@@ -1,10 +1,10 @@
-var SocksClient = require('../lib/socks-client.js');
+var Socks = require('../index.js');
 
 var options = {
     proxy: {
-        ipaddress: "202.101.228.108",
-        port: 1080,
-        type: 4  // (4 or 5)
+        ipaddress: "31.193.133.9",
+        port: 1081,
+        type: 5  // (4 or 5)
     },
 
     target: {
@@ -13,7 +13,7 @@ var options = {
     }
 };
 
-SocksClient.createConnection(options, function (err, socket, info) {
+Socks.createConnection(options, function (err, socket, info) {
     if (err)
         console.log(err);
     else {

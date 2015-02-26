@@ -1,4 +1,4 @@
-var SocksClient = require('../lib/socks-client.js');
+var Socks = require('../index.js');
 var dgram = require('dgram');
 
 var options = {
@@ -15,7 +15,7 @@ var options = {
     }
 };
 
-SocksClient.createConnection(options, function(err, socket, info) {
+Socks.createConnection(options, function(err, socket, info) {
     if (err)
         console.log(err);
     else {
