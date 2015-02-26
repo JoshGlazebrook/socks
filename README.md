@@ -220,7 +220,7 @@ http.get({ hostname: 'google.com', port: '443', agent: socksAgent}, function (re
 
 There are only three exported functions that you will ever need to use.
 
-###Socks.createConnection( options, callback(err, socket, info)  )
+### Socks.createConnection( options, callback(err, socket, info)  )
 > `Object` **Object containing options to use when creating this connection**
 
 > `function` **Callback that is called when connection completes or errors**
@@ -299,7 +299,7 @@ function(err, socket, info) {
 }
 ```
 
-###Socks.createUDPFrame( target, data, [frame] )
+### Socks.createUDPFrame( target, data, [frame] )
 > `Object` **Target host object containing destination for UDP packet**
 
 > `Buffer` **Data Buffer to send in the UDP packet**
@@ -325,7 +325,7 @@ var target =
 
 ```
 
-###Socks.Agent( options, tls)  )
+### Socks.Agent( options, tls)  )
 > `Object` **Object containing options to use when creating this connection (see above in createConnection)**
 
 > `boolean` **Boolean indicating if we upgrade the connection to TLS on the socks server**
