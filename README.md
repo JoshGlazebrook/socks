@@ -205,14 +205,14 @@ var socksAgent = new Socks.Agent({
         ipaddress: "202.101.228.108",
         port: 1080,
         type: 5,
-    },
+    }},
     true, // we are connecting to a HTTPS server, false for HTTP server
     false // rejectUnauthorized option passed to tls.connect(). Only when secure is set to true
-});
+);
 
 http.get({ hostname: 'google.com', port: '443', agent: socksAgent}, function (res) {
     // Connection header by default is keep-alive, we have to manually end the socket
-    socksAgent.encryptedProxy.end();
+    socksAgent.encryptedSocket.end();
 });
 ```
 
