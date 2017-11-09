@@ -3,6 +3,9 @@ socks
 
 socks is a full client implementation of the SOCKS 4, 4a, and 5 protocols in an easy to use node.js module.
 
+### This fork is just for use with wtfnode
+This fork of the 'socks' module makes a small change in lib/socks-client.js to the socket.on('data') handler to allow using this module when also using module "wtfnode" (which inserts itself into socket connections to allow listing connections that are open, i.e. which may be preventing the node process from closing e.g. mocha test runs).
+
 ### Notice
 As of February 26th, 2015, socks is the new home of the socks-client package.
 
