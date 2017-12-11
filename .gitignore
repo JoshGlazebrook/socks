@@ -12,6 +12,9 @@ lib-cov
 pids
 logs
 results
-
-npm-debug.log
 node_modules
+npm-debug.log
+coverage
+build
+.nyc_output
+.DS_Store
