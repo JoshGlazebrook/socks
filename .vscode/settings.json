@@ -1,0 +1,16 @@
+{
+
+  "editor.formatOnSave": false,
+  "prettier.tabWidth": 2,
+  "prettier.singleQuote": true,
+  "prettier.trailingComma": "none",
+  "prettier.printWidth": 80,
+  "editor.detectIndentation": false,
+  "editor.tabSize": 2,
+  "editor.lineNumbers": "on",
+  "prettier.typescriptEnable": [
+    "typescript",
+    "typescriptreact"
+  ],
+  "explorer.confirmDragAndDrop": false
+}
