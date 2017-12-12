@@ -1,3 +1,6 @@
+/**
+ * Utility class for buffering data received via a net.Socket.
+ */
 class DataBuffer {
   private _buff: Buffer;
   private _dataLength: number;

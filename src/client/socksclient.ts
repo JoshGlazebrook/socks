@@ -313,6 +313,8 @@ class SocksClient extends EventEmitter implements SocksClient {
       } else {
         this.handleSocks5IncomingConnectionResponse(data);
       }
+    } else {
+      this._closeSocket('SocksClient is in a invalid internal state.');
     }
   }
 
