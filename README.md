@@ -1,23 +1,21 @@
 socks
 =============
 
-socks is a full client implementation of the SOCKS 4, 4a, and 5 protocols in an easy to use node.js module.
+Fully featured SOCKS proxy client supporting SOCKSv4, SOCKSv4a, and SOCKSv5. Includes Bind and Associate functionality.
 
-### Notice
-As of February 26th, 2015, socks is the new home of the socks-client package.
+### Highlights
 
-### Why socks?
-
-There is not any other SOCKS proxy client library on npm that supports all three variants of the SOCKS protocol. Nor are there any that support the BIND and associate features that some versions of the SOCKS protocol supports.
-
-Key Features:
-* Supports SOCKS 4, 4a, and 5 protocols
-* Supports the connect method (simple tcp connections of SOCKS)  (Client -> SOCKS Server -> Target Server)
-* Supports the BIND method (4, 4a, 5)
-* Supports the associate (UDP forwarding) method (5)
-* Simple and easy to use (one function call to make any type of SOCKS connection)
+* Supports SOCKS 4, 4a, and 5 protocols.
+* Supports the CONNECT, BIND, and ASSOCIATE commands.
+* Supports callbacks, promises, and events for proxy connection creation flows.
+* Supports Proxy chaining (CONNECT only).
+* Built in UDP frame creationg & parsing methods.
+* Built in TypeScript, typings are provided.
 
 ## Installing:
+`yarn add socks`
+
+or
 
 `npm install socks`
 
