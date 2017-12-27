@@ -1,6 +1,7 @@
 {
   "name": "socks",
-  "version": "2.0.0",
+  "private": false,
+  "version": "2.0.3",
   "description": "Fully featured SOCKS proxy client supporting SOCKSv4, SOCKSv4a, and SOCKSv5. Includes Bind and Associate functionality.",
   "main": "build/index.js",
   "typings": "typings",

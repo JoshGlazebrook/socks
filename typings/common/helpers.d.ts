@@ -2,8 +2,9 @@ import { SocksClientOptions, SocksClientChainOptions } from '../client/socksclie
 /**
  * Validates the provided SocksClientOptions
  * @param options { SocksClientOptions }
+ * @param acceptedCommands { string[] } A list of accepted SocksProxy commands.
  */
-declare function validateSocksClientOptions(options: SocksClientOptions): void;
+declare function validateSocksClientOptions(options: SocksClientOptions, acceptedCommands?: string[]): void;
 /**
  * Validates the SocksClientChainOptions
  * @param options { SocksClientChainOptions }

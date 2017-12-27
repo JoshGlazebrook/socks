@@ -1,22 +1,19 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
 import * as net from 'net';
-import { SocksClientOptions, SocksClientChainOptions, SocksRemoteHost, SocksProxy, SocksClientEstablishedEvent, SocksUDPFrameDetails } from '../common/constants';
+import { SocksClientOptions, SocksClientChainOptions, SocksRemoteHost, SocksProxy, SocksClientBoundEvent, SocksClientEstablishedEvent, SocksUDPFrameDetails } from '../common/constants';
 import { SocksClientError } from '../common/util';
 interface SocksClient {
-    on(event: 'close', listener: (had_error: boolean) => void): this;
     on(event: 'error', listener: (err: SocksClientError) => void): this;
-    on(event: 'bound', listener: (info: SocksClientEstablishedEvent) => void): this;
+    on(event: 'bound', listener: (info: SocksClientBoundEvent) => void): this;
     on(event: 'established', listener: (info: SocksClientEstablishedEvent) => void): this;
     once(event: string, listener: (...args: any[]) => void): this;
-    once(event: 'close', listener: (had_error: boolean) => void): this;
     once(event: 'error', listener: (err: SocksClientError) => void): this;
-    once(event: 'bound', listener: (info: SocksClientEstablishedEvent) => void): this;
+    once(event: 'bound', listener: (info: SocksClientBoundEvent) => void): this;
     once(event: 'established', listener: (info: SocksClientEstablishedEvent) => void): this;
     emit(event: string | symbol, ...args: any[]): boolean;
-    emit(event: 'close'): boolean;
     emit(event: 'error', err: SocksClientError): boolean;
-    emit(event: 'bound', info: SocksClientEstablishedEvent): boolean;
+    emit(event: 'bound', info: SocksClientBoundEvent): boolean;
     emit(event: 'established', info: SocksClientEstablishedEvent): boolean;
 }
 declare class SocksClient extends EventEmitter implements SocksClient {
@@ -29,11 +26,23 @@ declare class SocksClient extends EventEmitter implements SocksClient {
     private _onConnect;
     constructor(options: SocksClientOptions);
     /**
-     * Creates a
-     * @param options
-     * @param callback
+     * Creates a new SOCKS connection.
+     *
+     * Note: Supports callbacks and promises. Only supports the connect command.
+     * @param options { SocksClientOptions } Options.
+     * @param callback { Function } An optional callback function.
+     * @returns { Promise }
      */
     static createConnection(options: SocksClientOptions, callback?: Function): Promise<SocksClientEstablishedEvent>;
+    /**
+     * Creates a new SOCKS connection chain to a destination host through 2 or more SOCKS proxies.
+     *
+     * Note: Supports callbacks and promises. Only supports the connect method.
+     * Note: Implemented via createConnection() factory function.
+     * @param options { SocksClientChainOptions } Options
+     * @param callback { Function } An optional callback function.
+     * @returns { Promise }
+     */
     static createConnectionChain(options: SocksClientChainOptions, callback?: Function): Promise<SocksClientEstablishedEvent>;
     /**
      * Creates a SOCKS UDP Frame.
@@ -49,12 +58,12 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      * Gets the SocksClient internal state.
      */
     /**
-     * Internal state setter. If the SocksClient is in a closed or error state, it cannot be changed to a non error state.
+     * Internal state setter. If the SocksClient is in an error state, it cannot be changed to a non error state.
      */
     private state;
     /**
      * Starts the connection establishment to the proxy and destination.
-     * @param existing_socket Connected socket to use instead of creating a new one (iternal use).
+     * @param existing_socket Connected socket to use instead of creating a new one (internal use).
      */
     connect(existing_socket?: net.Socket): void;
     /**
@@ -86,12 +95,10 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      */
     private removeInternalSocketHandlers();
     /**
-     * Closes and destroys the underlying Socket.
-     *
-     * Note: Either only the 'close' or 'error' event will be emitted in a SocksClient lifetime. Never both.
-     * @param err Optional error message to include in error event.
+     * Closes and destroys the underlying Socket. Emits an error event.
+     * @param err { String } An error string to include in error event.
      */
-    private _closeSocket(err?);
+    private _closeSocket(err);
     /**
      * Sends initial Socks v4 handshake request.
      */
@@ -116,11 +123,11 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      */
     private handleInitialSocks5HandshakeResponse(data);
     /**
-     * Sends Socks v5 auth handshake.
+     * Sends Socks v5 user & password auth handshake.
      *
      * Note: No auth and user/pass are currently supported.
      */
-    private sendSocks5Authentication();
+    private sendSocks5UserPassAuthentication();
     /**
      * Handles Socks v5 auth handshake response.
      * @param data

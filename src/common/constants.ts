@@ -7,12 +7,31 @@ type SocksProxyType = 4 | 5;
 // prettier-ignore
 const ERRORS = {
   InvalidSocksCommand: 'An invalid SOCKS command was provided. Valid options are connect, bind, and associate.',
+  InvalidSocksCommandForOperation: 'An invalid SOCKS command was provided. Only a subset of commands are supported for this operation.',
   InvalidSocksCommandChain: 'An invalid SOCKS command was provided. Chaining currently only supports the connect command.',
   InvalidSocksClientOptionsDestination: 'An invalid destination host was provided.',
   InvalidSocksClientOptionsExistingSocket: 'An invalid existing socket was provided. This should be an instance of net.Socket.',
   InvalidSocksClientOptionsProxy: 'Invalid SOCKS proxy details were provided.',
   InvalidSocksClientOptionsTimeout: 'An invalid timeout value was provided. Please enter a value above 0 (in ms).',
-  InvalidSocksClientOptionsProxiesLength: 'At least two socks proxies must be provided for chaining.'
+  InvalidSocksClientOptionsProxiesLength: 'At least two socks proxies must be provided for chaining.',
+  NegotiationError: 'Negotiation error',
+  SocketClosed: 'Socket closed',
+  ProxyConnectionTimedOut: 'Proxy connection timed out',
+  InternalError: 'SocksClient internal error (this should not happen)',
+  InvalidSocks4HandshakeResponse: 'Received invalid Socks4 handshake response',
+  Socks4ProxyRejectedConnection: 'Socks4 Proxy rejected connection',
+  InvalidSocks4IncomingConnectionResponse: 'Socks4 invalid incoming connection response',
+  Socks4ProxyRejectedIncomingBoundConnection: 'Socks4 Proxy rejected incoming bound connection',
+  InvalidSocks5InitialHandshakeResponse: 'Received invalid Socks5 initial handshake response',
+  InvalidSocks5IntiailHandshakeSocksVersion: 'Received invalid Socks5 initial handshake (invalid socks version)',
+  InvalidSocks5InitialHandshakeNoAcceptedAuthType: 'Received invalid Socks5 initial handshake (no accepted authentication type)',
+  InvalidSocks5InitialHandshakeUnknownAuthType: 'Received invalid Socks5 initial handshake (unknown authentication type)',
+  Socks5AuthenticationFailed: 'Socks5 Authentication failed',
+  InvalidSocks5FinalHandshake: 'Received invalid Socks5 final handshake response',
+  InvalidSocks5FinalHandshakeRejected: 'Socks5 proxy rejected connection',
+  InvalidSocks5IncomingConnectionResponse: 'Received invalid Socks5 incoming connection response',
+  Socks5ProxyRejectedIncomingBoundConnection: 'Socks5 Proxy rejected incoming bound connection',
+
 };
 
 type SocksCommandOption = 'connect' | 'bind' | 'associate';
@@ -60,7 +79,7 @@ enum SocksClientState {
   Connected = 2,
   SentInitialHandshake = 3,
   ReceivedInitialHandshakeResponse = 4,
-  SentAuthenication = 5,
+  SentAuthentication = 5,
   ReceivedAuthenticationResponse = 6,
   SentFinalHandshake = 7,
   ReceivedFinalResponse = 8,
@@ -68,48 +87,84 @@ enum SocksClientState {
   Established = 10,
   Disconnected = 11,
   Error = 99,
-  Closed = 100
 }
 
+/**
+ * Represents a SocksProxy
+ */
 interface SocksProxy {
+  // The ip address of the proxy.
   ipaddress: string;
+  // Numeric port number of the proxy.
   port: number;
+  // 4 or 5 (4 is also used for 4a).
   type: SocksProxyType;
+  /* For SOCKS v4, the userId can be used for authentication.
+     For SOCKS v5, userId is used as the username for username/password authentication. */
   userId?: string;
+  // For SOCKS v5, this password is used in username/password authentication.
   password?: string;
 }
 
+/**
+ * Represents a remote host
+ */
 interface SocksRemoteHost {
+  // IPv4, IPv6, or Hostname.
   host: string;
+  // Numeric port number.
   port: number;
 }
 
+/**
+ * SocksClient connection options.
+ */
 interface SocksClientOptions {
-  command?: SocksCommandOption;
+  // connect, bind, associate.
+  command: SocksCommandOption;
+  // The remote destination host to connect to via the proxy.
   destination: SocksRemoteHost;
-
+  // The proxy server to use.
   proxy: SocksProxy;
+  // The amount of time to wait when establishing a proxy connection (ms).
   timeout?: number;
+  // Used internally for proxy chaining.
   existing_socket?: Socket;
 }
 
+/**
+ * SocksClient chain connection options.
+ */
 interface SocksClientChainOptions {
+  // Only the connect command is supported when chaining.
   command: 'connect';
+  // The remote destination host to connect to via the proxy.
   destination: SocksRemoteHost;
-
+  // The list of proxy servers to chain.
   proxies: SocksProxy[];
+  // The amount of time to wait when establishing a proxy connection (ms).
   timeout?: number;
+  // If true, the list of proxies will be shuffled (default: false)
   randomizeChain?: false;
 }
 
 interface SocksClientEstablishedEvent {
+  // The raw net.Socket that is a proxied connection through the proxy to the destination host.
   socket: Socket;
-  remoteHostInfo?: SocksRemoteHost;
+  // If provided, this is the remote host that connected to the proxy when using bind.
+  remoteHost?: SocksRemoteHost;
 }
 
+type SocksClientBoundEvent = SocksClientEstablishedEvent;
+
 interface SocksUDPFrameDetails {
+  // The frame number of the packet.
   frameNumber?: number;
+
+  // The remote host.
   remoteHost: SocksRemoteHost;
+
+  // The packet data.
   data: Buffer;
 }
 
@@ -129,5 +184,6 @@ export {
   SocksClientOptions,
   SocksClientChainOptions,
   SocksClientEstablishedEvent,
+  SocksClientBoundEvent,
   SocksUDPFrameDetails
 };

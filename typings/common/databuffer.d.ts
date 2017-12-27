@@ -3,10 +3,10 @@
  * Utility class for buffering data received via a net.Socket.
  */
 declare class DataBuffer {
+    static DEFAULT_SIZE: number;
     private _buff;
     private _dataLength;
     private _maxSize;
-    static DEFAULT_SIZE: number;
     /**
      * Creates a new DataBuffer
      * @param size { Number } The initial size to use for the internal Buffer.

@@ -92,7 +92,7 @@ describe('Validating SocksProxyOptions', () => {
   };
 
   const socksCommandValid = 'connect';
-  const socksCommandinvalid: any = 'other';
+  const socksCommandInvalid: any = 'other';
 
   const socksProxyValid: SocksProxy = {
     ipaddress: '1.2.3.4',
@@ -194,9 +194,19 @@ describe('Validating SocksProxyOptions', () => {
     assert.throws(() => {
       validateSocksClientOptions({
         proxy: socksProxyValid,
-        command: socksCommandinvalid,
+        command: socksCommandInvalid,
         destination: socksRemoteHostValid
       });
+    }, SocksClientError);
+  });
+
+  it('should throw an exception when given a invalid command (not accepted)', () => {
+    assert.throws(() => {
+      validateSocksClientOptions({
+        proxy: socksProxyValid,
+        command: 'bind',
+        destination: socksRemoteHostValid
+      }, ['connect']);
     }, SocksClientError);
   });
 
@@ -287,7 +297,7 @@ describe('Validating SocksProxyOptions', () => {
   it('should throw an exception when given invalid socks command (non connect)', () => {
     assert.throws(() => {
       validateSocksClientChainOptions({
-        command: socksCommandinvalid,
+        command: socksCommandInvalid,
         destination: socksRemoteHostValid,
         timeout: 10000,
         proxies: socksProxiesValid

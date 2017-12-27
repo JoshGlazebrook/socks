@@ -4,12 +4,30 @@ declare const DEFAULT_TIMEOUT = 30000;
 declare type SocksProxyType = 4 | 5;
 declare const ERRORS: {
     InvalidSocksCommand: string;
+    InvalidSocksCommandForOperation: string;
     InvalidSocksCommandChain: string;
     InvalidSocksClientOptionsDestination: string;
     InvalidSocksClientOptionsExistingSocket: string;
     InvalidSocksClientOptionsProxy: string;
     InvalidSocksClientOptionsTimeout: string;
     InvalidSocksClientOptionsProxiesLength: string;
+    NegotiationError: string;
+    SocketClosed: string;
+    ProxyConnectionTimedOut: string;
+    InternalError: string;
+    InvalidSocks4HandshakeResponse: string;
+    Socks4ProxyRejectedConnection: string;
+    InvalidSocks4IncomingConnectionResponse: string;
+    Socks4ProxyRejectedIncomingBoundConnection: string;
+    InvalidSocks5InitialHandshakeResponse: string;
+    InvalidSocks5IntiailHandshakeSocksVersion: string;
+    InvalidSocks5InitialHandshakeNoAcceptedAuthType: string;
+    InvalidSocks5InitialHandshakeUnknownAuthType: string;
+    Socks5AuthenticationFailed: string;
+    InvalidSocks5FinalHandshake: string;
+    InvalidSocks5FinalHandshakeRejected: string;
+    InvalidSocks5IncomingConnectionResponse: string;
+    Socks5ProxyRejectedIncomingBoundConnection: string;
 };
 declare type SocksCommandOption = 'connect' | 'bind' | 'associate';
 declare enum SocksCommand {
@@ -50,7 +68,7 @@ declare enum SocksClientState {
     Connected = 2,
     SentInitialHandshake = 3,
     ReceivedInitialHandshakeResponse = 4,
-    SentAuthenication = 5,
+    SentAuthentication = 5,
     ReceivedAuthenticationResponse = 6,
     SentFinalHandshake = 7,
     ReceivedFinalResponse = 8,
@@ -58,8 +76,10 @@ declare enum SocksClientState {
     Established = 10,
     Disconnected = 11,
     Error = 99,
-    Closed = 100,
 }
+/**
+ * Represents a SocksProxy
+ */
 interface SocksProxy {
     ipaddress: string;
     port: number;
@@ -67,17 +87,26 @@ interface SocksProxy {
     userId?: string;
     password?: string;
 }
+/**
+ * Represents a remote host
+ */
 interface SocksRemoteHost {
     host: string;
     port: number;
 }
+/**
+ * SocksClient connection options.
+ */
 interface SocksClientOptions {
-    command?: SocksCommandOption;
+    command: SocksCommandOption;
     destination: SocksRemoteHost;
     proxy: SocksProxy;
     timeout?: number;
     existing_socket?: Socket;
 }
+/**
+ * SocksClient chain connection options.
+ */
 interface SocksClientChainOptions {
     command: 'connect';
     destination: SocksRemoteHost;
@@ -87,11 +116,12 @@ interface SocksClientChainOptions {
 }
 interface SocksClientEstablishedEvent {
     socket: Socket;
-    remoteHostInfo?: SocksRemoteHost;
+    remoteHost?: SocksRemoteHost;
 }
+declare type SocksClientBoundEvent = SocksClientEstablishedEvent;
 interface SocksUDPFrameDetails {
     frameNumber?: number;
     remoteHost: SocksRemoteHost;
     data: Buffer;
 }
-export { DEFAULT_TIMEOUT, ERRORS, SocksProxyType, SocksCommand, Socks4Response, Socks5Auth, Socks5HostType, Socks5Response, SocksClientState, SocksProxy, SocksRemoteHost, SocksCommandOption, SocksClientOptions, SocksClientChainOptions, SocksClientEstablishedEvent, SocksUDPFrameDetails };
+export { DEFAULT_TIMEOUT, ERRORS, SocksProxyType, SocksCommand, Socks4Response, Socks5Auth, Socks5HostType, Socks5Response, SocksClientState, SocksProxy, SocksRemoteHost, SocksCommandOption, SocksClientOptions, SocksClientChainOptions, SocksClientEstablishedEvent, SocksClientBoundEvent, SocksUDPFrameDetails };

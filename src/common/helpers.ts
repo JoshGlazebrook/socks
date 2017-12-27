@@ -10,11 +10,17 @@ import * as net from 'net';
 /**
  * Validates the provided SocksClientOptions
  * @param options { SocksClientOptions }
+ * @param acceptedCommands { string[] } A list of accepted SocksProxy commands.
  */
-function validateSocksClientOptions(options: SocksClientOptions) {
+function validateSocksClientOptions(options: SocksClientOptions, acceptedCommands = ['connect', 'bind', 'associate']) {
   // Check SOCKs command option.
   if (!SocksCommand[options.command]) {
     throw new SocksClientError(ERRORS.InvalidSocksCommand, options);
+  }
+
+  // Check SocksCommand for acceptable command.
+  if (!acceptedCommands.includes(options.command)) {
+    throw new SocksClientError(ERRORS.InvalidSocksCommandForOperation, options);
   }
 
   // Check destination

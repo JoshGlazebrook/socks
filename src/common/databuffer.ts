@@ -2,11 +2,10 @@
  * Utility class for buffering data received via a net.Socket.
  */
 class DataBuffer {
+  public static DEFAULT_SIZE = 4096;
   private _buff: Buffer;
   private _dataLength: number;
   private _maxSize: number;
-
-  public static DEFAULT_SIZE = 4096;
 
   /**
    * Creates a new DataBuffer
