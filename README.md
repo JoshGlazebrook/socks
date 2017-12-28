@@ -362,6 +362,9 @@ client.on('established', info => {
   });
   udpSocket.send(packet, info.remoteHost.port, info.remoteHost.host);
 });
+
+// Start connection
+client.connect();
 ```
 
 **Note:** The associate TCP connection to the proxy must remain open for the UDP relay to work.

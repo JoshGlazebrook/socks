@@ -80,4 +80,7 @@ client.on('established', (info) => {
 client.on('error', () => {
   // Handle errors
 });
+
+// Start connection
+client.connect();
 ```
