@@ -12,14 +12,17 @@ import * as net from 'net';
  * @param options { SocksClientOptions }
  * @param acceptedCommands { string[] } A list of accepted SocksProxy commands.
  */
-function validateSocksClientOptions(options: SocksClientOptions, acceptedCommands = ['connect', 'bind', 'associate']) {
+function validateSocksClientOptions(
+  options: SocksClientOptions,
+  acceptedCommands = ['connect', 'bind', 'associate']
+) {
   // Check SOCKs command option.
   if (!SocksCommand[options.command]) {
     throw new SocksClientError(ERRORS.InvalidSocksCommand, options);
   }
 
   // Check SocksCommand for acceptable command.
-  if (!acceptedCommands.includes(options.command)) {
+  if (acceptedCommands.indexOf(options.command) === -1) {
     throw new SocksClientError(ERRORS.InvalidSocksCommandForOperation, options);
   }
 
@@ -75,7 +78,13 @@ function validateSocksClientChainOptions(options: SocksClientChainOptions) {
   }
 
   // Validate proxies (length)
-  if (!(options.proxies && Array.isArray(options.proxies) && options.proxies.length >= 2)) {
+  if (
+    !(
+      options.proxies &&
+      Array.isArray(options.proxies) &&
+      options.proxies.length >= 2
+    )
+  ) {
     throw new SocksClientError(
       ERRORS.InvalidSocksClientOptionsProxiesLength,
       options

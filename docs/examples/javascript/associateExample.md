@@ -20,11 +20,11 @@ At this point the proxy is accepting UDP frames on the specified port.
 
 The 'associate' command can only be used by creating a new SocksClient instance and listening for the 'established' event.
 
-**Note:** UDP packets relayed through the proxy servers are packaged in a special Socks UDP frame format. SocksClient.createUDPFrame() and SocksClient.parseUDPFrame() create and parse these special UDP packets.
+**Note:** UDP packets relayed through the proxy servers are encompassed in a special Socks UDP frame format. SocksClient.createUDPFrame() and SocksClient.parseUDPFrame() create and parse these special UDP packets.
 
 ```typescript
-import * as dgram from 'dgram';
-import { SocksClient, SocksClientOptions } from 'socks';
+const dgram = require('dgram');
+const SocksClient = require('socks').SocksClient;
 
 // Create a local UDP socket for sending/receiving packets to/from the proxy.
 const udpSocket = dgram.createSocket('udp4');
@@ -41,7 +41,7 @@ udpSocket.on('message', (message, rinfo) => {
   */
 });
 
-const options: SocksClientOptions = {
+const options = {
   proxy: {
     ipaddress: '104.131.124.203',
     port: 1081,

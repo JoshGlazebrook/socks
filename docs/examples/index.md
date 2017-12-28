@@ -2,16 +2,16 @@
 
 ## TypeScript Examples
 
-Connect command
+[Connect command](typescript/connectExample.md)
 
-Bind command
+[Bind command](typescript/bindExample.md)
 
-Associate command
+[Associate command](typescript/associateExample.md)
 
 ## JavaScript Examples
 
-Connect command
+[Connect command](javascript/connectExample.md)
 
-Bind command
+[Bind command](javascript/bindExample.md)
 
-Associate command
+[Associate command](javascript/associateExample.md)

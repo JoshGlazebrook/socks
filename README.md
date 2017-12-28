@@ -1,4 +1,4 @@
-# socks
+# socks  [![Build Status](https://travis-ci.org/JoshGlazebrook/socks.svg?branch=master)](https://travis-ci.org/JoshGlazebrook/socks)  [![Coverage Status](https://coveralls.io/repos/github/JoshGlazebrook/socks/badge.svg?branch=v2)](https://coveralls.io/github/JoshGlazebrook/socks?branch=v2)
 
 Fully featured SOCKS proxy client supporting SOCKSv4, SOCKSv4a, and SOCKSv5. Includes Bind and Associate functionality.
 
@@ -11,6 +11,10 @@ Fully featured SOCKS proxy client supporting SOCKSv4, SOCKSv4a, and SOCKSv5. Inc
 * Supports user/pass authentication.
 * Built in UDP frame creation & parse functions.
 * Created with TypeScript, type definitions are provided.
+
+### Requirements
+
+* Node.js v6.0+  (Please use [v1](https://github.com/JoshGlazebrook/socks/tree/82d83923ad960693d8b774cafe17443ded7ed584) for older versions of Node.js)
 
 ## Installation
 
@@ -361,29 +365,28 @@ client.on('established', info => {
 
 ## Additional Examples
 
-TypeScript examples [here](https://github.com/JoshGlazebrook/socks/docs/examples/typescript)
+[Documentation](docs)
 
-JavaScript examples [here](https://github.com/JoshGlazebrook/socks/docs/examples/javascript)
 
 ## Migrating from v1
 
-Looking for a guide to migrate from v1? Look [here](https://github.com/JoshGlazebrook/socks/docs/migratingFromV1)
+Looking for a guide to migrate from v1? Look [here](docs/migratingFromV1.md)
 
 ## Api Reference:
 
 **Note:** socks includes full TypeScript definitions. These can even be used without using TypeScript as most IDEs (such as VS Code) will use these type definition files for auto completion intellisense even in JavaScript files.
 
 * Class: SocksClient
-  * new SocksClient(options[, callback])
-  * Class Method: SocksClient.createConnection(options[, callback])
-  * Class Method: SocksClient.createConnectionChain(options[, callback])
-  * Class Method: SocksClient.createUDPFrame(options)
-  * Class Method: SocksClient.parseUDPFrame(data)
-  * Event: 'bound'
-  * Event: 'error'
-  * Event: 'established'
-  * client.connect()
-  * client.socksClientOptions
+  * [new SocksClient(options[, callback])](#new-socksclientoptions)
+  * [Class Method: SocksClient.createConnection(options[, callback])](#class-method-socksclientcreateconnectionoptions-callback)
+  * [Class Method: SocksClient.createConnectionChain(options[, callback])](#class-method-socksclientcreateconnectionchainoptions-callback)
+  * [Class Method: SocksClient.createUDPFrame(options)](#class-method-socksclientcreateudpframedetails)
+  * [Class Method: SocksClient.parseUDPFrame(data)](#class-method-socksclientparseudpframedata)
+  * [Event: 'error'](#event-error)
+  * [Event: 'bound'](#event-bound)
+  * [Event: 'established'](#event-established)
+  * [client.connect()](#clientconnect)
+  * [client.socksClientOptions](#clientconnect)
 
 ### SocksClient
 
@@ -410,6 +413,10 @@ SocksClient supports creating connections using callbacks, promises, and async/a
     ipaddress: '159.203.75.200', // ipv4 or ipv6
     port: 1080,
     type: 5 // Proxy version (4 or 5). For v4a, just use 4.
+
+    // Optional fields
+    userId: 'some username', // Used for SOCKS4 userId auth, and SOCKS5 user/pass auth in conjunction with password.
+    password: 'some password' // Used in conjunction with userId for user/pass auth for SOCKS5 proxies.
   },
 
   command: 'connect', // connect, bind, associate
@@ -417,7 +424,10 @@ SocksClient supports creating connections using callbacks, promises, and async/a
   destination: {
     host: '192.30.253.113', // ipv4, ipv6, hostname. Hostnames work with v4a and v5.
     port: 80
-  }
+  },
+
+  // Optional fields
+  timeout: 30000; // How long to wait to establish a proxy connection. (defaults to 30 seconds)
 }
 ```
 

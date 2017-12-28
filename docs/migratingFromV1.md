@@ -7,7 +7,7 @@ For the most part, migrating from v1 takes minimal effort as v2 still supports f
 ### Notable breaking changes
 
 - In an options object, the proxy 'command' is now required and does not default to 'connect'.
-- In an options object, 'target' is now known as 'destination'.
+- **In an options object, 'target' is now known as 'destination'.**
 - Sockets are no longer paused after a SOCKS connection is made, so socket.resume() is no longer required. (Please be sure to attach data handlers immediately to the Socket to avoid losing data).
 - In v2, only the 'connect' command is supported via the factory SocksClient.createConnection function. (BIND and ASSOCIATE must be used with a SocksClient instance via event handlers).
 - In v2, the factory SocksClient.createConnection function callback is called with a single object rather than separate socket and info object.

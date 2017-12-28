@@ -86,7 +86,7 @@ enum SocksClientState {
   BoundWaitingForConnection = 9,
   Established = 10,
   Disconnected = 11,
-  Error = 99,
+  Error = 99
 }
 
 /**
