@@ -267,7 +267,7 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   public connect(existing_socket?: net.Socket) {
     this._onDataReceived = (data: Buffer) => this.onDataReceived(data);
-    this._onClose = (had_error: boolean) => this.onClose(had_error);
+    this._onClose = () => this.onClose();
     this._onError = (err: Error) => this.onError(err);
     this._onConnect = () => this.onConnect();
 
@@ -370,7 +370,7 @@ class SocksClient extends EventEmitter implements SocksClient {
    * Handles Socket close event.
    * @param had_error
    */
-  private onClose(had_error: boolean) {
+  private onClose() {
     this._closeSocket(ERRORS.SocketClosed);
   }
 

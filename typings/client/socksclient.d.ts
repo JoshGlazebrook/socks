@@ -84,7 +84,7 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      * Handles Socket close event.
      * @param had_error
      */
-    private onClose(had_error);
+    private onClose();
     /**
      * Handles Socket error event.
      * @param err
