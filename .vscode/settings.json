@@ -1,0 +1,39 @@
+{
+
+  "editor.formatOnSave": false,
+  "prettier.tabWidth": 2,
+  "prettier.singleQuote": true,
+  "prettier.trailingComma": "none",
+  "prettier.printWidth": 80,
+  "editor.detectIndentation": false,
+  "editor.tabSize": 2,
+  "editor.lineNumbers": "on",
+  "prettier.typescriptEnable": [
+    "typescript",
+    "typescriptreact"
+  ],
+  "explorer.confirmDragAndDrop": false,
+  "cSpell.enabledLanguageIds": [
+    "c",
+    "cpp",
+    "csharp",
+    "go",
+    "handlebars",
+    "javascript",
+    "javascriptreact",
+    "json",
+    "latex",
+    "markdown",
+    "php",
+    "plaintext",
+    "python",
+    "restructuredtext",
+    "text",
+    "typescript",
+    "typescriptreact",
+    "yml"
+  ],
+  "cSpell.words": [
+    "ipaddress"
+  ]
+}

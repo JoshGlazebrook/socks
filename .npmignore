@@ -1,4 +1,11 @@
-node_modules
 .git*
-.idea
+.idea*
+node_modules/
 npm-debug.log
+coverage
+src
+test
+tslint.json
+tsconfig.json
+.vscode
+.nyc_output
