@@ -1,5 +1,5 @@
 # Documentation
 
-- [API Reference](README.md#api-reference)
+- [API Reference](https://github.com/JoshGlazebrook/socks#api-reference)
 
 - [Code Examples](./examples/index.md)

@@ -398,6 +398,7 @@ SocksClient establishes SOCKS proxy connections to remote destination hosts. The
 SocksClient supports creating connections using callbacks, promises, and async/await flow control using two static factory functions createConnection and createConnectionChain. It also internally extends EventEmitter which results in allowing event handling based async flow control.
 
 **SOCKS Compatibility Table**
+
 | Socks Version | TCP | UDP | IPv4 | IPv6 | Hostname |
 | --- | :---: | :---: | :---: | :---: | :---: |
 | SOCKS v4 | ✅ | ❌ | ✅ | ❌ | ❌ |
