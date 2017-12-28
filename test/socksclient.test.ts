@@ -1,4 +1,4 @@
-import { SocksClient, SocksClientOptions } from '../src/client/socksclient';
+import { SocksClient } from '../src/client/socksclient';
 import { assert } from 'chai';
 import 'mocha';
 import { SocksRemoteHost, SocksProxy } from '../src/common/constants';
