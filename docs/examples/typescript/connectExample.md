@@ -66,6 +66,7 @@ async function start() {
           "zip":"07014"
         }
       */
+    });
   } catch (err) {
     // Handle errors
   }
@@ -126,6 +127,7 @@ SocksClient.createConnection(options)
         "zip":"07014"
       }
     */
+  });
 })
 .catch(err => {
   // handle errors
@@ -190,6 +192,7 @@ SocksClient.createConnection(options, (err, info) => {
           "zip":"07014"
         }
       */
+    });
   }
 })
 ```
@@ -249,6 +252,7 @@ client.on('established', (info) => {
         "zip":"07014"
       }
     */
+  });
 });
 
 // Failed to establish proxy connection to destination.

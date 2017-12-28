@@ -365,7 +365,7 @@ client.on('established', info => {
 
 ## Additional Examples
 
-[Documentation](docs)
+[Documentation](docs/index.md)
 
 
 ## Migrating from v1

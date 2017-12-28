@@ -1,7 +1,7 @@
 {
   "name": "socks",
   "private": false,
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Fully featured SOCKS proxy client supporting SOCKSv4, SOCKSv4a, and SOCKSv5. Includes Bind and Associate functionality.",
   "main": "build/index.js",
   "typings": "typings",
@@ -21,7 +21,7 @@
     "socks5"
   ],
   "engines": {
-    "node": ">= 4.0.0",
+    "node": ">= 6.0.0",
     "npm": ">= 3.0.0"
   },
   "author": "Josh Glazebrook",
