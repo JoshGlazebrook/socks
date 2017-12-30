@@ -150,7 +150,6 @@ class SocksClient extends EventEmitter implements SocksClient {
                   port: options.proxies[i + 1].port
                 };
 
-          console.log(nextProxy, '->', nextDestination);
           // Creates the next connection in the chain.
           const result = await SocksClient.createConnection({
             command: 'connect',
