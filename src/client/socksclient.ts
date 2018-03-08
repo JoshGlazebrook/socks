@@ -788,6 +788,7 @@ class SocksClient extends EventEmitter implements SocksClient {
 
       this.state = SocksClientState.Established;
       this.removeInternalSocketHandlers();
+      this._excessData = data.slice(10);
       this.emit('established', { socket: this._socket, remoteHost });
     }
   }
