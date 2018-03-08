@@ -52,6 +52,7 @@ class SocksClient extends EventEmitter implements SocksClient {
   private _options: SocksClientOptions;
   private _socket: net.Socket;
   private _state: SocksClientState;
+  private _excessData: Buffer;
 
   // Internal Socket data handlers
   private _onDataReceived: (data: Buffer) => void;
@@ -291,6 +292,17 @@ class SocksClient extends EventEmitter implements SocksClient {
 
     this.state = SocksClientState.Connecting;
 
+    // Listen for established event so we can re-emit any excess data received on final handshakes.
+    this.prependListener('established', info => {
+      if (this._excessData.length > 0) {
+        info.socket.pause();
+        setImmediate(() => {
+          info.socket.emit('data', this._excessData);
+          info.socket.resume();
+        });
+      }
+    });
+
     if (existing_socket) {
       this._socket.emit('connect');
     } else {
@@ -473,6 +485,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       } else {
         this.state = SocksClientState.Established;
         this.removeInternalSocketHandlers();
+        this._excessData = data.slice(8);
         this.emit('established', { socket: this._socket });
       }
     }
@@ -503,6 +516,7 @@ class SocksClient extends EventEmitter implements SocksClient {
 
       this.state = SocksClientState.Established;
       this.removeInternalSocketHandlers();
+      this._excessData = data.slice(8);
       this.emit('established', { socket: this._socket, remoteHost });
     }
   }
@@ -628,6 +642,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       if (SocksCommand[this._options.command] === SocksCommand.connect) {
         this.state = SocksClientState.Established;
         this.removeInternalSocketHandlers();
+        this._excessData = data.slice(10);
         this.emit('established', { socket: this._socket });
       } else {
         // Read address type
@@ -694,6 +709,7 @@ class SocksClient extends EventEmitter implements SocksClient {
         ) {
           this.state = SocksClientState.Established;
           this.removeInternalSocketHandlers();
+          this._excessData = data.slice(10);
           this.emit('established', { socket: this._socket, remoteHost });
         }
       }

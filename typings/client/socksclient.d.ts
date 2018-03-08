@@ -20,6 +20,7 @@ declare class SocksClient extends EventEmitter implements SocksClient {
     private _options;
     private _socket;
     private _state;
+    private _excessData;
     private _onDataReceived;
     private _onClose;
     private _onError;
