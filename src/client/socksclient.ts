@@ -299,9 +299,6 @@ class SocksClient extends EventEmitter implements SocksClient {
         this._options.proxy.ipaddress
       );
     }
-
-    // Listens for instance 'established' event to remove internal data socket handlers.
-    this.once('established', () => this.removeInternalSocketHandlers());
   }
 
   /**
@@ -475,6 +472,7 @@ class SocksClient extends EventEmitter implements SocksClient {
         // Connect response
       } else {
         this.state = SocksClientState.Established;
+        this.removeInternalSocketHandlers();
         this.emit('established', { socket: this._socket });
       }
     }
@@ -504,6 +502,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       };
 
       this.state = SocksClientState.Established;
+      this.removeInternalSocketHandlers();
       this.emit('established', { socket: this._socket, remoteHost });
     }
   }
@@ -628,6 +627,7 @@ class SocksClient extends EventEmitter implements SocksClient {
 
       if (SocksCommand[this._options.command] === SocksCommand.connect) {
         this.state = SocksClientState.Established;
+        this.removeInternalSocketHandlers();
         this.emit('established', { socket: this._socket });
       } else {
         // Read address type
@@ -693,6 +693,7 @@ class SocksClient extends EventEmitter implements SocksClient {
           SocksCommand[this._options.command] === SocksCommand.associate
         ) {
           this.state = SocksClientState.Established;
+          this.removeInternalSocketHandlers();
           this.emit('established', { socket: this._socket, remoteHost });
         }
       }
@@ -770,6 +771,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       }
 
       this.state = SocksClientState.Established;
+      this.removeInternalSocketHandlers();
       this.emit('established', { socket: this._socket, remoteHost });
     }
   }
