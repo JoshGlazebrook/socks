@@ -292,17 +292,6 @@ class SocksClient extends EventEmitter implements SocksClient {
 
     this.state = SocksClientState.Connecting;
 
-    // Listen for established event so we can re-emit any excess data received on final handshakes.
-    this.prependListener('established', info => {
-      if (this._excessData.length > 0) {
-        info.socket.pause();
-        setImmediate(() => {
-          info.socket.emit('data', this._excessData);
-          info.socket.resume();
-        });
-      }
-    });
-
     if (existing_socket) {
       this._socket.emit('connect');
     } else {
@@ -311,6 +300,17 @@ class SocksClient extends EventEmitter implements SocksClient {
         this._options.proxy.ipaddress
       );
     }
+
+    // Listen for established event so we can re-emit any excess data received on final handshakes.
+    this.prependOnceListener('established', info => {
+      if (this._excessData.length > 0) {
+        info.socket.pause();
+        setImmediate(() => {
+          info.socket.emit('data', this._excessData);
+          info.socket.resume();
+        });
+      }
+    });
   }
 
   /**
