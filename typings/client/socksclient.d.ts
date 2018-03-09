@@ -20,7 +20,8 @@ declare class SocksClient extends EventEmitter implements SocksClient {
     private _options;
     private _socket;
     private _state;
-    private _excessData;
+    private _receiveBuffer;
+    private _nextRequiredPacketBufferSize;
     private _onDataReceived;
     private _onClose;
     private _onError;
@@ -82,6 +83,10 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      */
     private onDataReceived(data);
     /**
+     * Handles processing of the data we have received.
+     */
+    private processData();
+    /**
      * Handles Socket close event.
      * @param had_error
      */
@@ -108,12 +113,12 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      * Handles Socks v4 handshake response.
      * @param data
      */
-    private handleSocks4FinalHandshakeResponse(data);
+    private handleSocks4FinalHandshakeResponse();
     /**
      * Handles Socks v4 incoming connection request (BIND)
      * @param data
      */
-    private handleSocks4IncomingConnectionResponse(data);
+    private handleSocks4IncomingConnectionResponse();
     /**
      * Sends initial Socks v5 handshake request.
      */
@@ -122,7 +127,7 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      * Handles initial Socks v5 handshake response.
      * @param data
      */
-    private handleInitialSocks5HandshakeResponse(data);
+    private handleInitialSocks5HandshakeResponse();
     /**
      * Sends Socks v5 user & password auth handshake.
      *
@@ -133,7 +138,7 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      * Handles Socks v5 auth handshake response.
      * @param data
      */
-    private handleInitialSocks5AuthenticationHandshakeResponse(data);
+    private handleInitialSocks5AuthenticationHandshakeResponse();
     /**
      * Sends Socks v5 final handshake request.
      */
@@ -142,12 +147,11 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      * Handles Socks v5 final handshake response.
      * @param data
      */
-    private handleSocks5FinalHandshakeResponse(data);
+    private handleSocks5FinalHandshakeResponse();
     /**
      * Handles Socks v5 incoming connection request (BIND).
-     * @param data
      */
-    private handleSocks5IncomingConnectionResponse(data);
+    private handleSocks5IncomingConnectionResponse();
     readonly socksClientOptions: SocksClientOptions;
 }
 export { SocksClient, SocksClientOptions, SocksClientChainOptions, SocksRemoteHost, SocksProxy, SocksUDPFrameDetails };
