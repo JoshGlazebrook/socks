@@ -24,7 +24,7 @@ import {
   validateSocksClientOptions,
   validateSocksClientChainOptions
 } from '../common/helpers';
-import { ReceiveBuffer } from '../common/receiveBuffer';
+import { ReceiveBuffer } from '../common/receivebuffer';
 import { SocksClientError, shuffleArray } from '../common/util';
 
 // Exposes SocksClient event types
