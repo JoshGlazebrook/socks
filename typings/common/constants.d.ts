@@ -29,6 +29,15 @@ declare const ERRORS: {
     InvalidSocks5IncomingConnectionResponse: string;
     Socks5ProxyRejectedIncomingBoundConnection: string;
 };
+declare const SOCKS_INCOMING_PACKET_SIZES: {
+    Socks5InitialHandshakeResponse: number;
+    Socks5UserPassAuthenticationResponse: number;
+    Socks5ResponseHeader: number;
+    Socks5ResponseIPv4: number;
+    Socks5ResponseIPv6: number;
+    Socks5ResponseHostname: (hostNameLength: number) => number;
+    Socks4Response: number;
+};
 declare type SocksCommandOption = 'connect' | 'bind' | 'associate';
 declare enum SocksCommand {
     connect = 1,
@@ -124,4 +133,4 @@ interface SocksUDPFrameDetails {
     remoteHost: SocksRemoteHost;
     data: Buffer;
 }
-export { DEFAULT_TIMEOUT, ERRORS, SocksProxyType, SocksCommand, Socks4Response, Socks5Auth, Socks5HostType, Socks5Response, SocksClientState, SocksProxy, SocksRemoteHost, SocksCommandOption, SocksClientOptions, SocksClientChainOptions, SocksClientEstablishedEvent, SocksClientBoundEvent, SocksUDPFrameDetails };
+export { DEFAULT_TIMEOUT, ERRORS, SocksProxyType, SocksCommand, Socks4Response, Socks5Auth, Socks5HostType, Socks5Response, SocksClientState, SocksProxy, SocksRemoteHost, SocksCommandOption, SocksClientOptions, SocksClientChainOptions, SocksClientEstablishedEvent, SocksClientBoundEvent, SocksUDPFrameDetails, SOCKS_INCOMING_PACKET_SIZES };

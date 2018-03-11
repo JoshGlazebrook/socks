@@ -31,7 +31,18 @@ const ERRORS = {
   InvalidSocks5FinalHandshakeRejected: 'Socks5 proxy rejected connection',
   InvalidSocks5IncomingConnectionResponse: 'Received invalid Socks5 incoming connection response',
   Socks5ProxyRejectedIncomingBoundConnection: 'Socks5 Proxy rejected incoming bound connection',
+};
 
+const SOCKS_INCOMING_PACKET_SIZES = {
+  Socks5InitialHandshakeResponse: 2,
+  Socks5UserPassAuthenticationResponse: 2,
+  // Command response + incoming connection (bind)
+  Socks5ResponseHeader: 5, // We need at least 5 to read the hostname length, then we wait for the address+port information.
+  Socks5ResponseIPv4: 10, // 4 header + 4 ip + 2 port
+  Socks5ResponseIPv6: 22, // 4 header + 16 ip + 2 port
+  Socks5ResponseHostname: (hostNameLength: number) => hostNameLength + 7, // 4 header + 1 host length + host + 2 port
+  // Command response + incoming connection (bind)
+  Socks4Response: 8 // 2 header + 2 port + 4 ip
 };
 
 type SocksCommandOption = 'connect' | 'bind' | 'associate';
@@ -185,5 +196,6 @@ export {
   SocksClientChainOptions,
   SocksClientEstablishedEvent,
   SocksClientBoundEvent,
-  SocksUDPFrameDetails
+  SocksUDPFrameDetails,
+  SOCKS_INCOMING_PACKET_SIZES
 };
