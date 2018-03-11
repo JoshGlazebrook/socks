@@ -32,7 +32,7 @@ declare const ERRORS: {
 declare const SOCKS_INCOMING_PACKET_SIZES: {
     Socks5InitialHandshakeResponse: number;
     Socks5UserPassAuthenticationResponse: number;
-    Socks5Response: number;
+    Socks5ResponseHeader: number;
     Socks5ResponseIPv4: number;
     Socks5ResponseIPv6: number;
     Socks5ResponseHostname: (hostNameLength: number) => number;

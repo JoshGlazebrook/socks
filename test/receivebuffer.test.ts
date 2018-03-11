@@ -83,5 +83,5 @@ describe('Using ReceiveBuffers', () => {
     assert.throws(() => {
       buff.append(notABuffer);
     });
-  })
+  });
 });

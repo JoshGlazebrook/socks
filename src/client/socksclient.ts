@@ -651,7 +651,7 @@ class SocksClient extends EventEmitter implements SocksClient {
     buff.writeUInt16BE(this._options.destination.port);
 
     this._nextRequiredPacketBufferSize =
-      SOCKS_INCOMING_PACKET_SIZES.Socks5Response;
+      SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHeader;
     this._socket.write(buff.toBuffer());
     this.state = SocksClientState.SentFinalHandshake;
   }
@@ -680,16 +680,15 @@ class SocksClient extends EventEmitter implements SocksClient {
       // IPv4
       if (addressType === Socks5HostType.IPv4) {
         // Check if data is available.
-        if (
-          this._receiveBuffer.length <
-          SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv4
-        ) {
-          this._nextRequiredPacketBufferSize =
-            SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv4;
+        const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv4;
+        if (this._receiveBuffer.length < dataNeeded) {
+          this._nextRequiredPacketBufferSize = dataNeeded;
           return;
         }
 
-        buff = SmartBuffer.fromBuffer(this._receiveBuffer.get(10));
+        buff = SmartBuffer.fromBuffer(
+          this._receiveBuffer.get(dataNeeded).slice(4)
+        );
 
         remoteHost = {
           host: ip.fromLong(buff.readUInt32BE()),
@@ -703,10 +702,10 @@ class SocksClient extends EventEmitter implements SocksClient {
 
         // Hostname
       } else if (addressType === Socks5HostType.Hostname) {
-        const hostLength = buff.readUInt8();
+        const hostLength = header[4];
         const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHostname(
           hostLength
-        ); // header + host length + port
+        ); // header + host length + host + port
 
         // Check if data is available.
         if (this._receiveBuffer.length < dataNeeded) {
@@ -714,7 +713,9 @@ class SocksClient extends EventEmitter implements SocksClient {
           return;
         }
 
-        buff = SmartBuffer.fromBuffer(this._receiveBuffer.get(dataNeeded));
+        buff = SmartBuffer.fromBuffer(
+          this._receiveBuffer.get(dataNeeded).slice(5) // Slice at 5 to skip host length
+        );
 
         remoteHost = {
           host: buff.readString(hostLength),
@@ -723,16 +724,15 @@ class SocksClient extends EventEmitter implements SocksClient {
         // IPv6
       } else if (addressType === Socks5HostType.IPv6) {
         // Check if data is available.
-        if (
-          this._receiveBuffer.length <
-          SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv6
-        ) {
-          this._nextRequiredPacketBufferSize =
-            SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv6;
+        const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv6;
+        if (this._receiveBuffer.length < dataNeeded) {
+          this._nextRequiredPacketBufferSize = dataNeeded;
           return;
         }
 
-        buff = SmartBuffer.fromBuffer(this._receiveBuffer.get(24));
+        buff = SmartBuffer.fromBuffer(
+          this._receiveBuffer.get(dataNeeded).slice(4)
+        );
 
         remoteHost = {
           host: ip.toString(buff.readBuffer(16)),
@@ -753,7 +753,7 @@ class SocksClient extends EventEmitter implements SocksClient {
            This means that the remote proxy server is waiting for a remote connection to the bound port. */
         this.state = SocksClientState.BoundWaitingForConnection;
         this._nextRequiredPacketBufferSize =
-          SOCKS_INCOMING_PACKET_SIZES.Socks5Response;
+          SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHeader;
         this.emit('bound', { socket: this._socket, remoteHost });
         /*
           If using Associate, the Socks client is now Established. And the proxy server is now accepting UDP packets at the
@@ -792,16 +792,15 @@ class SocksClient extends EventEmitter implements SocksClient {
       // IPv4
       if (addressType === Socks5HostType.IPv4) {
         // Check if data is available.
-        if (
-          this._receiveBuffer.length <
-          SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv4
-        ) {
-          this._nextRequiredPacketBufferSize =
-            SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv4;
+        const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv4;
+        if (this._receiveBuffer.length < dataNeeded) {
+          this._nextRequiredPacketBufferSize = dataNeeded;
           return;
         }
 
-        buff = SmartBuffer.fromBuffer(this._receiveBuffer.get(10));
+        buff = SmartBuffer.fromBuffer(
+          this._receiveBuffer.get(dataNeeded).slice(4)
+        );
 
         remoteHost = {
           host: ip.fromLong(buff.readUInt32BE()),
@@ -815,7 +814,7 @@ class SocksClient extends EventEmitter implements SocksClient {
 
         // Hostname
       } else if (addressType === Socks5HostType.Hostname) {
-        const hostLength = buff.readUInt8();
+        const hostLength = header[4];
         const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHostname(
           hostLength
         ); // header + host length + port
@@ -826,7 +825,9 @@ class SocksClient extends EventEmitter implements SocksClient {
           return;
         }
 
-        buff = SmartBuffer.fromBuffer(this._receiveBuffer.get(dataNeeded));
+        buff = SmartBuffer.fromBuffer(
+          this._receiveBuffer.get(dataNeeded).slice(5) // Slice at 5 to skip host length
+        );
 
         remoteHost = {
           host: buff.readString(hostLength),
@@ -835,16 +836,15 @@ class SocksClient extends EventEmitter implements SocksClient {
         // IPv6
       } else if (addressType === Socks5HostType.IPv6) {
         // Check if data is available.
-        if (
-          this._receiveBuffer.length <
-          SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv6
-        ) {
-          this._nextRequiredPacketBufferSize =
-            SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv6;
+        const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv6;
+        if (this._receiveBuffer.length < dataNeeded) {
+          this._nextRequiredPacketBufferSize = dataNeeded;
           return;
         }
 
-        buff = SmartBuffer.fromBuffer(this._receiveBuffer.get(24));
+        buff = SmartBuffer.fromBuffer(
+          this._receiveBuffer.get(dataNeeded).slice(4)
+        );
 
         remoteHost = {
           host: ip.toString(buff.readBuffer(16)),
