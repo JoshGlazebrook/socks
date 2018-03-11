@@ -559,7 +559,8 @@ class SocksClient extends EventEmitter implements SocksClient {
     buff.writeUInt8(Socks5Auth.NoAuth);
     buff.writeUInt8(Socks5Auth.UserPass);
 
-    this._nextRequiredPacketBufferSize = 2; // Need 2 bytes back
+    this._nextRequiredPacketBufferSize =
+      SOCKS_INCOMING_PACKET_SIZES.Socks5InitialHandshakeResponse;
     this._socket.write(buff.toBuffer());
     this.state = SocksClientState.SentInitialHandshake;
   }
