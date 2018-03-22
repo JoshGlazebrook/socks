@@ -1,3 +1,4 @@
+import { Duplex } from 'stream';
 import { Socket } from 'net';
 
 const DEFAULT_TIMEOUT = 30000;
@@ -140,7 +141,7 @@ interface SocksClientOptions {
   // The amount of time to wait when establishing a proxy connection (ms).
   timeout?: number;
   // Used internally for proxy chaining.
-  existing_socket?: Socket;
+  existing_socket?: Duplex;
 }
 
 /**

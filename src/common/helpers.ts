@@ -6,6 +6,7 @@ import {
 import { SocksClientError } from './util';
 import { ERRORS, SocksCommand, SocksProxy } from './constants';
 import * as net from 'net';
+import * as stream from 'stream';
 
 /**
  * Validates the provided SocksClientOptions
@@ -50,7 +51,7 @@ function validateSocksClientOptions(
   // Check existing_socket (if provided)
   if (
     options.existing_socket &&
-    !(options.existing_socket instanceof net.Socket)
+    !(options.existing_socket instanceof stream.Duplex)
   ) {
     throw new SocksClientError(
       ERRORS.InvalidSocksClientOptionsExistingSocket,
