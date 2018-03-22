@@ -26,6 +26,7 @@ import {
 } from '../common/helpers';
 import { ReceiveBuffer } from '../common/receivebuffer';
 import { SocksClientError, shuffleArray } from '../common/util';
+import { Duplex } from 'stream';
 
 // Exposes SocksClient event types
 declare interface SocksClient {
@@ -52,7 +53,7 @@ declare interface SocksClient {
 
 class SocksClient extends EventEmitter implements SocksClient {
   private _options: SocksClientOptions;
-  private _socket: net.Socket;
+  private _socket: Duplex;
   private _state: SocksClientState;
   // This is an internal ReceiveBuffer that holds all received data while we wait for enough data to process.
   private _receiveBuffer: ReceiveBuffer;
@@ -270,7 +271,7 @@ class SocksClient extends EventEmitter implements SocksClient {
    * Starts the connection establishment to the proxy and destination.
    * @param existing_socket Connected socket to use instead of creating a new one (internal use).
    */
-  public connect(existing_socket?: net.Socket) {
+  public connect(existing_socket?: Duplex) {
     this._onDataReceived = (data: Buffer) => this.onDataReceived(data);
     this._onClose = () => this.onClose();
     this._onError = (err: Error) => this.onError(err);
@@ -301,7 +302,7 @@ class SocksClient extends EventEmitter implements SocksClient {
     if (existing_socket) {
       this._socket.emit('connect');
     } else {
-      this._socket.connect(
+      (this._socket as net.Socket).connect(
         this._options.proxy.port,
         this._options.proxy.ipaddress
       );
@@ -441,7 +442,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       this.state = SocksClientState.Error;
 
       // Destroy Socket
-      if (!this._socket.destroyed) {
+      if (this._socket instanceof net.Socket && !this._socket.destroyed) {
         this._socket.destroy();
       }
 
