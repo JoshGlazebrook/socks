@@ -442,7 +442,10 @@ class SocksClient extends EventEmitter implements SocksClient {
       this.state = SocksClientState.Error;
 
       // Destroy Socket
-      if (this._socket instanceof net.Socket && !this._socket.destroyed) {
+      if (
+        !(this._socket instanceof net.Socket) ||
+        (this._socket instanceof net.Socket && !this._socket.destroyed)
+      ) {
         this._socket.destroy();
       }
 
