@@ -1,3 +1,4 @@
+import { Duplex } from 'stream';
 import { Socket } from 'net';
 
 const DEFAULT_TIMEOUT = 30000;
@@ -10,7 +11,7 @@ const ERRORS = {
   InvalidSocksCommandForOperation: 'An invalid SOCKS command was provided. Only a subset of commands are supported for this operation.',
   InvalidSocksCommandChain: 'An invalid SOCKS command was provided. Chaining currently only supports the connect command.',
   InvalidSocksClientOptionsDestination: 'An invalid destination host was provided.',
-  InvalidSocksClientOptionsExistingSocket: 'An invalid existing socket was provided. This should be an instance of net.Socket.',
+  InvalidSocksClientOptionsExistingSocket: 'An invalid existing socket was provided. This should be an instance of stream.Duplex.',
   InvalidSocksClientOptionsProxy: 'Invalid SOCKS proxy details were provided.',
   InvalidSocksClientOptionsTimeout: 'An invalid timeout value was provided. Please enter a value above 0 (in ms).',
   InvalidSocksClientOptionsProxiesLength: 'At least two socks proxies must be provided for chaining.',
@@ -140,7 +141,7 @@ interface SocksClientOptions {
   // The amount of time to wait when establishing a proxy connection (ms).
   timeout?: number;
   // Used internally for proxy chaining.
-  existing_socket?: Socket;
+  existing_socket?: Duplex;
 }
 
 /**
