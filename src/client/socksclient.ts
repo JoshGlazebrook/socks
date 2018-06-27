@@ -281,7 +281,7 @@ class SocksClient extends EventEmitter implements SocksClient {
     setTimeout(
       () => this.onEstablishedTimeout(),
       this._options.timeout || DEFAULT_TIMEOUT
-    );
+    ).unref();
 
     // If an existing socket is provided, use it to negotiate SOCKS handshake. Otherwise create a new Socket.
     if (existing_socket) {
