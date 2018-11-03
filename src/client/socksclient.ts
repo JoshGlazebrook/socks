@@ -281,10 +281,10 @@ class SocksClient extends EventEmitter implements SocksClient {
     const timer = setTimeout(
       () => this.onEstablishedTimeout(),
       this._options.timeout || DEFAULT_TIMEOUT
-    )
+    );
 
     // check whether unref is available as it differs from browser to NodeJS (#33)
-    if(timer.unref && typeof timer.unref === 'function'){
+    if (timer.unref && typeof timer.unref === 'function') {
       timer.unref();
     }
 
