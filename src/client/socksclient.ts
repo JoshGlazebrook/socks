@@ -278,10 +278,15 @@ class SocksClient extends EventEmitter implements SocksClient {
     this._onConnect = () => this.onConnect();
 
     // Start timeout timer (defaults to 30 seconds)
-    setTimeout(
+    const timer = setTimeout(
       () => this.onEstablishedTimeout(),
       this._options.timeout || DEFAULT_TIMEOUT
-    ).unref();
+    )
+
+    // check whether unref is available as it differs from browser to NodeJS (#33)
+    if(timer.unref && typeof timer.unref === 'function'){
+      timer.unref();
+    }
 
     // If an existing socket is provided, use it to negotiate SOCKS handshake. Otherwise create a new Socket.
     if (existing_socket) {
