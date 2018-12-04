@@ -113,6 +113,7 @@ interface SocksClientOptions {
     proxy: SocksProxy;
     timeout?: number;
     existing_socket?: Duplex;
+    set_tcp_nodelay?: boolean;
 }
 /**
  * SocksClient chain connection options.
