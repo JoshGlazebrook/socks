@@ -559,9 +559,17 @@ class SocksClient extends EventEmitter implements SocksClient {
   private sendSocks5InitialHandshake() {
     const buff = new SmartBuffer();
     buff.writeUInt8(0x05);
-    buff.writeUInt8(2);
-    buff.writeUInt8(Socks5Auth.NoAuth);
-    buff.writeUInt8(Socks5Auth.UserPass);
+
+    // We should only tell the proxy we support user/pass auth if auth info is actually provided.
+    // Note: As of Tor v0.3.5.7+, if user/pass auth is an option from the client, by default it will always take priority.
+    if (this._options.proxy.userId || this._options.proxy.password) {
+      buff.writeUInt8(2);
+      buff.writeUInt8(Socks5Auth.NoAuth);
+      buff.writeUInt8(Socks5Auth.UserPass);
+    } else {
+      buff.writeUInt8(1);
+      buff.writeUInt8(Socks5Auth.NoAuth);
+    }
 
     this._nextRequiredPacketBufferSize =
       SOCKS_INCOMING_PACKET_SIZES.Socks5InitialHandshakeResponse;
