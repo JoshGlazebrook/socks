@@ -1,7 +1,7 @@
 {
   "name": "socks",
   "private": false,
-  "version": "2.2.3",
+  "version": "2.3.0",
   "description": "Fully featured SOCKS proxy client supporting SOCKSv4, SOCKSv4a, and SOCKSv5. Includes Bind and Associate functionality.",
   "main": "build/index.js",
   "typings": "typings",
@@ -27,6 +27,9 @@
     "npm": ">= 3.0.0"
   },
   "author": "Josh Glazebrook",
+  "contributors": [
+    "castorw"
+  ],
   "license": "MIT",
   "readmeFilename": "README.md",
   "devDependencies": {

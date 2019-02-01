@@ -311,8 +311,13 @@ class SocksClient extends EventEmitter implements SocksClient {
         this._options.proxy.port,
         this._options.proxy.ipaddress
       );
-      if (this._options.set_tcp_nodelay !== undefined && this._options.set_tcp_nodelay !== null) {
-        (this._socket as net.Socket).setNoDelay(!!this._options.set_tcp_nodelay);
+      if (
+        this._options.set_tcp_nodelay !== undefined &&
+        this._options.set_tcp_nodelay !== null
+      ) {
+        (this._socket as net.Socket).setNoDelay(
+          !!this._options.set_tcp_nodelay
+        );
       }
     }
 
