@@ -434,7 +434,9 @@ SocksClient supports creating connections using callbacks, promises, and async/a
   },
 
   // Optional fields
-  timeout: 30000; // How long to wait to establish a proxy connection. (defaults to 30 seconds)
+  timeout: 30000, // How long to wait to establish a proxy connection. (defaults to 30 seconds)
+
+  set_tcp_nodelay: true // If true, will turn on the underlying sockets TCP_NODELAY option.
 }
 ```
 
