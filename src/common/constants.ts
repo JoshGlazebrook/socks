@@ -142,6 +142,8 @@ interface SocksClientOptions {
   timeout?: number;
   // Used internally for proxy chaining.
   existing_socket?: Duplex;
+  // Whether to set TCP_NODELAY
+  set_tcp_nodelay?: boolean;
 }
 
 /**
