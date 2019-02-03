@@ -5,7 +5,6 @@ import {
 } from '../client/socksclient';
 import { SocksClientError } from './util';
 import { ERRORS, SocksCommand, SocksProxy } from './constants';
-import * as net from 'net';
 import * as stream from 'stream';
 
 /**
@@ -132,7 +131,7 @@ function isValidSocksRemoteHost(remoteHost: SocksRemoteHost) {
 function isValidSocksProxy(proxy: SocksProxy) {
   return (
     proxy &&
-    net.isIP(proxy.ipaddress) &&
+    (typeof proxy.host === 'string' || typeof proxy.ipaddress === 'string') &&
     typeof proxy.port === 'number' &&
     proxy.port >= 0 &&
     proxy.port <= 65535 &&

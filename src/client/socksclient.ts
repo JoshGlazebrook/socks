@@ -309,7 +309,7 @@ class SocksClient extends EventEmitter implements SocksClient {
     } else {
       (this._socket as net.Socket).connect(
         this._options.proxy.port,
-        this._options.proxy.ipaddress
+        this._options.proxy.host || this._options.proxy.ipaddress
       );
       if (
         this._options.set_tcp_nodelay !== undefined &&

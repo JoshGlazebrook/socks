@@ -47,7 +47,7 @@ Connect to github.com (192.30.253.113) on port 80, using a SOCKS proxy.
 ```javascript
 const options = {
   proxy: {
-    ipaddress: '159.203.75.200',
+    host: '159.203.75.200', // ipv4 or ipv6 or hostname
     port: 1080,
     type: 5 // Proxy version (4 or 5)
   },
@@ -106,12 +106,12 @@ const options = {
   command: 'connect', // Only the connect command is supported when chaining proxies.
   proxies: [ // The chain order is the order in the proxies array, meaning the last proxy will establish a connection to the destination.
     {
-      ipaddress: '159.203.75.235',
+      host: '159.203.75.235', // ipv4, ipv6, or hostname
       port: 1081,
       type: 5
     },
     {
-      ipaddress: '104.131.124.203',
+      host: '104.131.124.203', // ipv4, ipv6, or hostname
       port: 1081,
       type: 5
     }
@@ -252,7 +252,7 @@ When the bind command is sent to a SOCKS v4/v5 proxy server, the proxy server st
 ```javascript
 const options = {
   proxy: {
-    ipaddress: '159.203.75.235',
+    host: '159.203.75.235', // ipv4, ipv6, or hostname
     port: 1081,
     type: 5
   },
@@ -314,7 +314,7 @@ When the associate command is sent to a SOCKS v5 proxy server, it sets up a UDP 
 ```javascript
 const options = {
   proxy: {
-    ipaddress: '159.203.75.235',
+    host: '159.203.75.235', // ipv4, ipv6, or hostname
     port: 1081,
     type: 5
   },
@@ -417,7 +417,7 @@ SocksClient supports creating connections using callbacks, promises, and async/a
 ```typescript
 {
   proxy: {
-    ipaddress: '159.203.75.200', // ipv4 or ipv6
+    host: '159.203.75.200', // ipv4, ipv6, or hostname
     port: 1080,
     type: 5 // Proxy version (4 or 5). For v4a, just use 4.
 
@@ -452,7 +452,7 @@ Creates a new proxy connection through the given proxy to the given destination 
 ```typescript
 const options = {
   proxy: {
-    ipaddress: '159.203.75.200', // ipv4 or ipv6
+    host: '159.203.75.200', // ipv4, ipv6, or hostname
     port: 1080,
     type: 5 // Proxy version (4 or 5)
   },
@@ -460,7 +460,7 @@ const options = {
   command: 'connect', // connect, bind, associate
 
   destination: {
-    host: '192.30.253.113', // ipv4, ipv6, hostname
+    host: '192.30.253.113', // ipv4, ipv6, or hostname
     port: 80
   }
 }
@@ -524,12 +524,12 @@ Creates a new proxy connection chain through a list of at least two SOCKS proxie
 const options = {
   proxies: [ // The chain order is the order in the proxies array, meaning the last proxy will establish a connection to the destination.
     {
-      ipaddress: '159.203.75.235', // ipv4 or ipv6
+      host: '159.203.75.235', // ipv4, ipv6, or hostname
       port: 1081,
       type: 5
     },
     {
-      ipaddress: '104.131.124.203', // ipv4 or ipv6
+      host: '104.131.124.203', // ipv4, ipv6, or hostname
       port: 1081,
       type: 5
     }

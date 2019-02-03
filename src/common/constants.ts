@@ -1,5 +1,6 @@
 import { Duplex } from 'stream';
 import { Socket } from 'net';
+import { RequireOnlyOne } from './util';
 
 const DEFAULT_TIMEOUT = 30000;
 
@@ -104,19 +105,24 @@ enum SocksClientState {
 /**
  * Represents a SocksProxy
  */
-interface SocksProxy {
-  // The ip address of the proxy.
-  ipaddress: string;
-  // Numeric port number of the proxy.
-  port: number;
-  // 4 or 5 (4 is also used for 4a).
-  type: SocksProxyType;
-  /* For SOCKS v4, the userId can be used for authentication.
+type SocksProxy = RequireOnlyOne<
+  {
+    // The ip address (or hostname) of the proxy. (this is equivalent to the host option)
+    ipaddress?: string;
+    // The ip address (or hostname) of the proxy. (this is equivalent to the ipaddress option)
+    host?: string;
+    // Numeric port number of the proxy.
+    port: number;
+    // 4 or 5 (4 is also used for 4a).
+    type: SocksProxyType;
+    /* For SOCKS v4, the userId can be used for authentication.
      For SOCKS v5, userId is used as the username for username/password authentication. */
-  userId?: string;
-  // For SOCKS v5, this password is used in username/password authentication.
-  password?: string;
-}
+    userId?: string;
+    // For SOCKS v5, this password is used in username/password authentication.
+    password?: string;
+  },
+  'host' | 'ipaddress'
+>;
 
 /**
  * Represents a remote host
