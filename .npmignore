@@ -9,3 +9,17 @@ tslint.json
 tsconfig.json
 .vscode
 .nyc_output
+lib-cov
+*.seed
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+pids
+logs
+results
+node_modules
+build
+.DS_Store
