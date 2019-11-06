@@ -1,5 +1,5 @@
 import { Duplex } from 'stream';
-import { Socket } from 'net';
+import { Socket, SocketConnectOpts } from 'net';
 import { RequireOnlyOne } from './util';
 
 const DEFAULT_TIMEOUT = 30000;
@@ -150,6 +150,8 @@ interface SocksClientOptions {
   existing_socket?: Duplex;
   // Whether to set TCP_NODELAY
   set_tcp_nodelay?: boolean;
+  // TCP SocketConnection Options host/port in this object will be overriden by host/port in destination property.
+  socket_options?: SocketConnectOpts;
 }
 
 /**

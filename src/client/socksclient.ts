@@ -307,10 +307,8 @@ class SocksClient extends EventEmitter implements SocksClient {
     if (existing_socket) {
       this._socket.emit('connect');
     } else {
-      (this._socket as net.Socket).connect(
-        this._options.proxy.port,
-        this._options.proxy.host || this._options.proxy.ipaddress
-      );
+      (this._socket as net.Socket).connect(this.getSocketOptions());
+
       if (
         this._options.set_tcp_nodelay !== undefined &&
         this._options.set_tcp_nodelay !== null
@@ -334,6 +332,15 @@ class SocksClient extends EventEmitter implements SocksClient {
         info.socket.resume();
       });
     });
+  }
+
+  // Socket options (defaults host/port to options.proxy.host/options.proxy.port)
+  private getSocketOptions(): net.SocketConnectOpts {
+    return {
+      ...this._options.socket_options,
+      host: this._options.proxy.host || this._options.proxy.ipaddress,
+      port: this._options.proxy.port
+    };
   }
 
   /**

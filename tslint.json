@@ -60,8 +60,6 @@
 			1
 		],
 		"no-trailing-whitespace": true,
-		"no-unused-variable": true,
-		"no-use-before-declare": true,
 		"no-var-keyword": true,
 		"one-line": [
 			true,
