@@ -897,6 +897,7 @@ export {
   SocksClient,
   SocksClientOptions,
   SocksClientChainOptions,
+  SocksClientError,
   SocksRemoteHost,
   SocksProxy,
   SocksUDPFrameDetails
