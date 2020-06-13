@@ -47,6 +47,10 @@
     "tslint": "^5.8.0",
     "typescript": "3.7.2"
   },
+  "files": [
+    "lib",
+    "index.js"
+  ],
   "dependencies": {
     "ip": "1.1.5",
     "smart-buffer": "^4.1.0"
