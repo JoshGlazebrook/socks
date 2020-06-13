@@ -1,13 +1,10 @@
-import { SocksClientOptions, SocksClientChainOptions } from './constants';
+import {SocksClientOptions, SocksClientChainOptions} from './constants';
 
 /**
  * Error wrapper for SocksClient
  */
 class SocksClientError extends Error {
-  constructor(
-    message: string,
-    public options: SocksClientOptions | SocksClientChainOptions
-  ) {
+  constructor(message: string, public options: SocksClientOptions | SocksClientChainOptions) {
     super(message);
   }
 }
@@ -17,20 +14,17 @@ class SocksClientError extends Error {
  * @param array The array to shuffle.
  */
 function shuffleArray(array: any[]) {
+  // tslint:disable-next-line:no-increment-decrement
   for (let i = array.length - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
   }
 }
 
 // Helper type to require one of N keys.
-type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<
-  T,
-  Exclude<keyof T, Keys>
-> &
+type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclude<keyof T, Keys>> &
   {
-    [K in Keys]?: Required<Pick<T, K>> &
-      Partial<Record<Exclude<Keys, K>, undefined>>;
+    [K in Keys]?: Required<Pick<T, K>> & Partial<Record<Exclude<Keys, K>, undefined>>;
   }[Keys];
 
-export { RequireOnlyOne, SocksClientError, shuffleArray };
+export {RequireOnlyOne, SocksClientError, shuffleArray};

@@ -1,6 +1,6 @@
-import { Duplex } from 'stream';
-import { Socket, SocketConnectOpts } from 'net';
-import { RequireOnlyOne } from './util';
+import {Duplex} from 'stream';
+import {Socket, SocketConnectOpts} from 'net';
+import {RequireOnlyOne} from './util';
 
 const DEFAULT_TIMEOUT = 30000;
 
@@ -44,7 +44,7 @@ const SOCKS_INCOMING_PACKET_SIZES = {
   Socks5ResponseIPv6: 22, // 4 header + 16 ip + 2 port
   Socks5ResponseHostname: (hostNameLength: number) => hostNameLength + 7, // 4 header + 1 host length + host + 2 port
   // Command response + incoming connection (bind)
-  Socks4Response: 8 // 2 header + 2 port + 4 ip
+  Socks4Response: 8, // 2 header + 2 port + 4 ip
 };
 
 type SocksCommandOption = 'connect' | 'bind' | 'associate';
@@ -52,20 +52,20 @@ type SocksCommandOption = 'connect' | 'bind' | 'associate';
 enum SocksCommand {
   connect = 0x01,
   bind = 0x02,
-  associate = 0x03
+  associate = 0x03,
 }
 
 enum Socks4Response {
   Granted = 0x5a,
   Failed = 0x5b,
   Rejected = 0x5c,
-  RejectedIdent = 0x5d
+  RejectedIdent = 0x5d,
 }
 
 enum Socks5Auth {
   NoAuth = 0x00,
   GSSApi = 0x01,
-  UserPass = 0x02
+  UserPass = 0x02,
 }
 
 enum Socks5Response {
@@ -77,13 +77,13 @@ enum Socks5Response {
   ConnectionRefused = 0x05,
   TTLExpired = 0x06,
   CommandNotSupported = 0x07,
-  AddressNotSupported = 0x08
+  AddressNotSupported = 0x08,
 }
 
 enum Socks5HostType {
   IPv4 = 0x01,
   Hostname = 0x03,
-  IPv6 = 0x04
+  IPv6 = 0x04,
 }
 
 enum SocksClientState {
@@ -99,7 +99,7 @@ enum SocksClientState {
   BoundWaitingForConnection = 9,
   Established = 10,
   Disconnected = 11,
-  Error = 99
+  Error = 99,
 }
 
 /**
@@ -208,5 +208,5 @@ export {
   SocksClientEstablishedEvent,
   SocksClientBoundEvent,
   SocksUDPFrameDetails,
-  SOCKS_INCOMING_PACKET_SIZES
+  SOCKS_INCOMING_PACKET_SIZES,
 };

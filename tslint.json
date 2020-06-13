@@ -1,94 +1,18 @@
 {
-	"rules": {
-		"class-name": true,
-		"curly": true,
-		"eofline": true,
-		"forin": false,
-		"indent": [
-			true,
-			"spaces"
-		],
-		"label-position": true,
+	"extends": "tslint-config-airbnb",
+	"linterOptions": {
+		"exclude": [
+			"node_modules/**/*.*"
+		]
+  },
+  "rules": {
 		"max-line-length": [
 			true,
 			140
 		],
-		"member-ordering": [
-			true,
-			{
-				"order": [
-					"public-static-field",
-					"protected-static-field",
-					"private-static-field",
-					"public-instance-field",
-					"protected-instance-field",
-					"private-instance-field",
-					"constructor",
-					"public-static-method",
-					"protected-static-method",
-					"private-static-method",
-					"public-instance-method",
-					"protected-instance-method",
-					"private-instance-method"
-				]
-			}
-		],
-		"no-arg": true,
-		"no-conditional-assignment": true,
-		"no-console": [
-			true,
-			"debug",
-			"info",
-			"time",
-			"timeEnd",
-			"trace"
-		],
-		"no-namespace": true,
-		"no-reference": true,
-		"no-construct": true,
-		"no-invalid-this": true,
-		"no-internal-module": true,
-		"no-debugger": true,
-		"no-duplicate-variable": true,
-		"no-empty": true,
-		"no-eval": true,
-		"no-shadowed-variable": true,
-		"no-string-literal": false,
-		"no-switch-case-fall-through": false,
-		"no-consecutive-blank-lines": [
-			true,
-			1
-		],
-		"no-trailing-whitespace": true,
-		"no-var-keyword": true,
-		"one-line": [
-			true,
-			"check-catch",
-			"check-else",
-			"check-whitespace"
-		],
-		"quotemark": [
-			true,
-			"single"
-		],
-		"radix": true,
-		"semicolon": [
-			true,
-			"always"
-		],
-		"triple-equals": [
-			true,
-			"allow-null-check"
-		],
-		"variable-name": false,
-		"switch-default": true,
-		"whitespace": [
-			true,
-			"check-branch",
-			"check-decl",
-			"check-operator",
-			"check-separator",
-			"check-type"
-		]
+		"no-else-after-return": [false],
+    "no-increment-decrement": [false],
+    "object-curly-spacing": [false],
+    "ter-indent": [false]
 	}
 }
