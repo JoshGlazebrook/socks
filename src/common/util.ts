@@ -4,7 +4,10 @@ import {SocksClientOptions, SocksClientChainOptions} from './constants';
  * Error wrapper for SocksClient
  */
 class SocksClientError extends Error {
-  constructor(message: string, public options: SocksClientOptions | SocksClientChainOptions) {
+  constructor(
+    message: string,
+    public options: SocksClientOptions | SocksClientChainOptions,
+  ) {
     super(message);
   }
 }
@@ -22,9 +25,13 @@ function shuffleArray(array: any[]) {
 }
 
 // Helper type to require one of N keys.
-type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclude<keyof T, Keys>> &
+type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<
+  T,
+  Exclude<keyof T, Keys>
+> &
   {
-    [K in Keys]?: Required<Pick<T, K>> & Partial<Record<Exclude<Keys, K>, undefined>>;
+    [K in Keys]?: Required<Pick<T, K>> &
+      Partial<Record<Exclude<Keys, K>, undefined>>;
   }[Keys];
 
 export {RequireOnlyOne, SocksClientError, shuffleArray};

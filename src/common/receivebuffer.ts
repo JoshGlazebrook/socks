@@ -15,13 +15,18 @@ class ReceiveBuffer {
 
   append(data: Buffer): number {
     if (!Buffer.isBuffer(data)) {
-      throw new Error('Attempted to append a non-buffer instance to ReceiveBuffer.');
+      throw new Error(
+        'Attempted to append a non-buffer instance to ReceiveBuffer.',
+      );
     }
 
     if (this.offset + data.length >= this.buffer.length) {
       const tmp = this.buffer;
       this.buffer = Buffer.allocUnsafe(
-        Math.max(this.buffer.length + this.originalSize, this.buffer.length + data.length),
+        Math.max(
+          this.buffer.length + this.originalSize,
+          this.buffer.length + data.length,
+        ),
       );
       tmp.copy(this.buffer);
     }
@@ -32,14 +37,18 @@ class ReceiveBuffer {
 
   peek(length: number) {
     if (length > this.offset) {
-      throw new Error('Attempted to read beyond the bounds of the managed internal data.');
+      throw new Error(
+        'Attempted to read beyond the bounds of the managed internal data.',
+      );
     }
     return this.buffer.slice(0, length);
   }
 
   get(length: number): Buffer {
     if (length > this.offset) {
-      throw new Error('Attempted to read beyond the bounds of the managed internal data.');
+      throw new Error(
+        'Attempted to read beyond the bounds of the managed internal data.',
+      );
     }
 
     const value = Buffer.allocUnsafe(length);

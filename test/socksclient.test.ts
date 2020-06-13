@@ -3,13 +3,16 @@ import {assert} from 'chai';
 import 'mocha';
 import {SocksRemoteHost, SocksProxy} from '../src/common/constants';
 import {SocksClientError, shuffleArray} from '../src/common/util';
-import {validateSocksClientOptions, validateSocksClientChainOptions} from '../src/common/helpers';
+import {
+  validateSocksClientOptions,
+  validateSocksClientChainOptions,
+} from '../src/common/helpers';
 import * as net from 'net';
 
 describe('Creating and parsing Socks UDP frames', () => {
   const packetData = Buffer.from([10, 12, 14, 16, 18, 20]);
   // prettier-ignore
-  const validIPv4Frame = Buffer.from([0x0, 0x0, 0x0, 0x1, 0x1, 0x2, 0x3, 0x4, 0x0, 0x50, 0xa, 0xc, 0xe, 0x10, 0x12, 0x14 ]);
+  const validIPv4Frame = Buffer.from([0x0, 0x0, 0x0, 0x1, 0x1, 0x2, 0x3, 0x4, 0x0, 0x50, 0xa, 0xc, 0xe, 0x10, 0x12, 0x14]);
   // prettier-ignore
   const validIPv6Frame = Buffer.from([0x0, 0x0, 0x4, 0x4, 0x20, 0x1, 0xd, 0xb8, 0x85, 0xa3, 0x12, 0x34, 0x8a, 0x2e, 0x3,
                                       0x70, 0x73, 0x34, 0x18, 0x40, 0x0, 0x50, 0xa, 0xc, 0xe, 0x10, 0x12, 0x14]);
@@ -153,7 +156,10 @@ describe('Validating SocksProxyOptions', () => {
 
   const socksProxiesInvalid: any = 'not an array of proxies';
 
-  const socksProxiesInvalidMixed: SocksProxy[] = [socksProxyValid, socksProxyInvalidIPAddress];
+  const socksProxiesInvalidMixed: SocksProxy[] = [
+    socksProxyValid,
+    socksProxyInvalidIPAddress,
+  ];
 
   it('should not throw an exception when passing valid options', () => {
     validateSocksClientOptions({

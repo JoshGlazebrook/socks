@@ -1,4 +1,8 @@
-import {SocksClientOptions, SocksClientChainOptions, SocksRemoteHost} from '../client/socksclient';
+import {
+  SocksClientOptions,
+  SocksClientChainOptions,
+  SocksRemoteHost,
+} from '../client/socksclient';
 import {SocksClientError} from './util';
 import {ERRORS, SocksCommand, SocksProxy} from './constants';
 import * as stream from 'stream';
@@ -24,7 +28,10 @@ function validateSocksClientOptions(
 
   // Check destination
   if (!isValidSocksRemoteHost(options.destination)) {
-    throw new SocksClientError(ERRORS.InvalidSocksClientOptionsDestination, options);
+    throw new SocksClientError(
+      ERRORS.InvalidSocksClientOptionsDestination,
+      options,
+    );
   }
 
   // Check SOCKS proxy to use
@@ -34,12 +41,21 @@ function validateSocksClientOptions(
 
   // Check timeout
   if (options.timeout && !isValidTimeoutValue(options.timeout)) {
-    throw new SocksClientError(ERRORS.InvalidSocksClientOptionsTimeout, options);
+    throw new SocksClientError(
+      ERRORS.InvalidSocksClientOptionsTimeout,
+      options,
+    );
   }
 
   // Check existing_socket (if provided)
-  if (options.existing_socket && !(options.existing_socket instanceof stream.Duplex)) {
-    throw new SocksClientError(ERRORS.InvalidSocksClientOptionsExistingSocket, options);
+  if (
+    options.existing_socket &&
+    !(options.existing_socket instanceof stream.Duplex)
+  ) {
+    throw new SocksClientError(
+      ERRORS.InvalidSocksClientOptionsExistingSocket,
+      options,
+    );
   }
 }
 
@@ -55,24 +71,42 @@ function validateSocksClientChainOptions(options: SocksClientChainOptions) {
 
   // Check destination
   if (!isValidSocksRemoteHost(options.destination)) {
-    throw new SocksClientError(ERRORS.InvalidSocksClientOptionsDestination, options);
+    throw new SocksClientError(
+      ERRORS.InvalidSocksClientOptionsDestination,
+      options,
+    );
   }
 
   // Validate proxies (length)
-  if (!(options.proxies && Array.isArray(options.proxies) && options.proxies.length >= 2)) {
-    throw new SocksClientError(ERRORS.InvalidSocksClientOptionsProxiesLength, options);
+  if (
+    !(
+      options.proxies &&
+      Array.isArray(options.proxies) &&
+      options.proxies.length >= 2
+    )
+  ) {
+    throw new SocksClientError(
+      ERRORS.InvalidSocksClientOptionsProxiesLength,
+      options,
+    );
   }
 
   // Validate proxies
   options.proxies.forEach((proxy: SocksProxy) => {
     if (!isValidSocksProxy(proxy)) {
-      throw new SocksClientError(ERRORS.InvalidSocksClientOptionsProxy, options);
+      throw new SocksClientError(
+        ERRORS.InvalidSocksClientOptionsProxy,
+        options,
+      );
     }
   });
 
   // Check timeout
   if (options.timeout && !isValidTimeoutValue(options.timeout)) {
-    throw new SocksClientError(ERRORS.InvalidSocksClientOptionsTimeout, options);
+    throw new SocksClientError(
+      ERRORS.InvalidSocksClientOptionsTimeout,
+      options,
+    );
   }
 }
 

@@ -2,7 +2,8 @@
 	"extends": "tslint-config-airbnb",
 	"linterOptions": {
 		"exclude": [
-			"node_modules/**/*.*"
+      "node_modules/**/*.*",
+      "test/**/*.*"
 		]
   },
   "rules": {
