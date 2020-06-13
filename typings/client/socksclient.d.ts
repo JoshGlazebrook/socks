@@ -156,4 +156,4 @@ declare class SocksClient extends EventEmitter implements SocksClient {
     private handleSocks5IncomingConnectionResponse;
     get socksClientOptions(): SocksClientOptions;
 }
-export { SocksClient, SocksClientOptions, SocksClientChainOptions, SocksRemoteHost, SocksProxy, SocksUDPFrameDetails };
+export { SocksClient, SocksClientOptions, SocksClientChainOptions, SocksClientError, SocksRemoteHost, SocksProxy, SocksUDPFrameDetails };
