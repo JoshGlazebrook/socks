@@ -1,19 +1,19 @@
-import { assert } from 'chai';
+import {assert} from 'chai';
 import 'mocha';
-import { ReceiveBuffer } from '../src/common/receivebuffer';
+import {ReceiveBuffer} from '../src/common/receivebuffer';
 
 describe('Creating ReceiveBuffers', () => {
   it('should default to 4096 internal buffer size', () => {
     const buff: any = new ReceiveBuffer();
-    assert.strictEqual(buff._buffer.length, 4096);
-    assert.strictEqual(buff._originalSize, 4096);
+    assert.strictEqual(buff.buffer.length, 4096);
+    assert.strictEqual(buff.originalSize, 4096);
   });
 
   it('should create an internal buffer with the specificed size', () => {
     const size = 1024;
     const buff: any = new ReceiveBuffer(size);
-    assert.strictEqual(buff._buffer.length, size);
-    assert.strictEqual(buff._originalSize, size);
+    assert.strictEqual(buff.buffer.length, size);
+    assert.strictEqual(buff.originalSize, size);
   });
 
   it('should have an internal offset of zero after creation', () => {
@@ -42,7 +42,7 @@ describe('Using ReceiveBuffers', () => {
     const data = Buffer.from('hello');
     buff.append(data);
 
-    assert.deepEqual(buff._buffer.slice(0, data.length), data);
+    assert.deepEqual(buff.buffer.slice(0, data.length), data);
   });
 
   it('should peek internal buffer data and not remove it', () => {
@@ -51,7 +51,7 @@ describe('Using ReceiveBuffers', () => {
     buff.append(data);
 
     assert.deepEqual(buff.peek(data.length), data);
-    assert.deepEqual(buff._buffer.slice(0, data.length), data);
+    assert.deepEqual(buff.buffer.slice(0, data.length), data);
   });
 
   it('should get internal buffer data and remove it properly', () => {
@@ -68,9 +68,9 @@ describe('Using ReceiveBuffers', () => {
   it('should grow in size if the buffer is full and we are trying to write more data', () => {
     const buff: any = new ReceiveBuffer(10);
     const longData = Buffer.from('heeeeeeeeellllllllllooooooooooo');
-    assert(buff._buffer.length < longData.length);
+    assert(buff.buffer.length < longData.length);
     buff.append(longData);
-    assert(buff._buffer.length >= longData.length);
+    assert(buff.buffer.length >= longData.length);
 
     const readData = buff.get(longData.length);
     assert.deepEqual(readData, longData);

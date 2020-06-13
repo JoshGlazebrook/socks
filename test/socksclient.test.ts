@@ -1,12 +1,9 @@
-import { SocksClient } from '../src/client/socksclient';
-import { assert } from 'chai';
+import {SocksClient} from '../src/client/socksclient';
+import {assert} from 'chai';
 import 'mocha';
-import { SocksRemoteHost, SocksProxy } from '../src/common/constants';
-import { SocksClientError, shuffleArray } from '../src/common/util';
-import {
-  validateSocksClientOptions,
-  validateSocksClientChainOptions
-} from '../src/common/helpers';
+import {SocksRemoteHost, SocksProxy} from '../src/common/constants';
+import {SocksClientError, shuffleArray} from '../src/common/util';
+import {validateSocksClientOptions, validateSocksClientChainOptions} from '../src/common/helpers';
 import * as net from 'net';
 
 describe('Creating and parsing Socks UDP frames', () => {
@@ -22,31 +19,31 @@ describe('Creating and parsing Socks UDP frames', () => {
 
   const ipv4HostInfo = {
     host: '1.2.3.4',
-    port: 80
+    port: 80,
   };
 
   const ipv6HostInfo = {
     host: '2001:db8:85a3:1234:8a2e:370:7334:1840',
-    port: 80
+    port: 80,
   };
 
   const hostHostInfo = {
     host: 'www.google.com',
-    port: 80
+    port: 80,
   };
 
   const ipv4UDPFrame = SocksClient.createUDPFrame({
     remoteHost: ipv4HostInfo,
-    data: packetData
+    data: packetData,
   });
   const ipv6UDPFrame = SocksClient.createUDPFrame({
     remoteHost: ipv6HostInfo,
     data: packetData,
-    frameNumber: 4
+    frameNumber: 4,
   });
   const hostnameUDPFrame = SocksClient.createUDPFrame({
     remoteHost: hostHostInfo,
-    data: packetData
+    data: packetData,
   });
 
   it('should generate valid UDP frames', () => {
@@ -80,17 +77,17 @@ describe('Creating and parsing Socks UDP frames', () => {
 describe('Validating SocksProxyOptions', () => {
   const socksRemoteHostValid: SocksRemoteHost = {
     host: '1.2.3.4',
-    port: 1080
+    port: 1080,
   };
 
   const socksRemoteHostInvalidHost: SocksRemoteHost = {
     host: undefined,
-    port: 1080
+    port: 1080,
   };
 
   const socksremoteHostInvalidPort: SocksRemoteHost = {
     host: '1.2.3.4',
-    port: undefined
+    port: undefined,
   };
 
   const socksCommandValid = 'connect';
@@ -99,32 +96,32 @@ describe('Validating SocksProxyOptions', () => {
   const socksProxyValid: SocksProxy = {
     ipaddress: '1.2.3.4',
     port: 1080,
-    type: 5
+    type: 5,
   };
 
   const socksProxyInvalidIPAddress: SocksProxy = {
     ipaddress: undefined,
     port: 1080,
-    type: 5
+    type: 5,
   };
 
   const socksProxyValidHost: SocksProxy = {
     host: 'openinternetproxyfree.com',
     port: 1080,
-    type: 5
+    type: 5,
   };
 
   const socksProxyValidHostInvalidIPAddress: SocksProxy = {
     host: 'openinternetproxyfree.com',
     ipaddress: undefined,
     port: 1080,
-    type: 5
+    type: 5,
   };
 
   const socksProxyInvalidHost: SocksProxy = {
     host: undefined,
     port: 1080,
-    type: 5
+    type: 5,
   };
 
   const invalidProxyType: any = 9;
@@ -132,19 +129,19 @@ describe('Validating SocksProxyOptions', () => {
   const socksProxyInvalidPortBounds: SocksProxy = {
     ipaddress: '1111:2222:3333:4444:5555:6666',
     port: 90000,
-    type: 4
+    type: 4,
   };
 
   const socksProxyInvalidPort: SocksProxy = {
     ipaddress: '1.2.3.4',
     port: undefined,
-    type: 4
+    type: 4,
   };
 
   const socksProxyInvalidType: SocksProxy = {
     ipaddress: '1.2.3.4',
     port: 1080,
-    type: invalidProxyType
+    type: invalidProxyType,
   };
 
   const socketValid = new net.Socket();
@@ -156,10 +153,7 @@ describe('Validating SocksProxyOptions', () => {
 
   const socksProxiesInvalid: any = 'not an array of proxies';
 
-  const socksProxiesInvalidMixed: SocksProxy[] = [
-    socksProxyValid,
-    socksProxyInvalidIPAddress
-  ];
+  const socksProxiesInvalidMixed: SocksProxy[] = [socksProxyValid, socksProxyInvalidIPAddress];
 
   it('should not throw an exception when passing valid options', () => {
     validateSocksClientOptions({
@@ -167,7 +161,7 @@ describe('Validating SocksProxyOptions', () => {
       command: socksCommandValid,
       destination: socksRemoteHostValid,
       timeout: 10000,
-      existing_socket: socketValid
+      existing_socket: socketValid,
     });
   });
 
@@ -177,7 +171,7 @@ describe('Validating SocksProxyOptions', () => {
       command: socksCommandValid,
       destination: socksRemoteHostValid,
       timeout: 10000,
-      existing_socket: socketValid
+      existing_socket: socketValid,
     });
   });
 
@@ -187,7 +181,7 @@ describe('Validating SocksProxyOptions', () => {
       command: socksCommandValid,
       destination: socksRemoteHostValid,
       timeout: 10000,
-      existing_socket: socketValid
+      existing_socket: socketValid,
     });
   });
 
@@ -196,7 +190,7 @@ describe('Validating SocksProxyOptions', () => {
       validateSocksClientOptions({
         proxy: socksProxyInvalidIPAddress,
         command: socksCommandValid,
-        destination: socksRemoteHostValid
+        destination: socksRemoteHostValid,
       });
     }, SocksClientError);
   });
@@ -206,7 +200,7 @@ describe('Validating SocksProxyOptions', () => {
       validateSocksClientOptions({
         proxy: socksProxyInvalidHost,
         command: socksCommandValid,
-        destination: socksRemoteHostValid
+        destination: socksRemoteHostValid,
       });
     }, SocksClientError);
   });
@@ -216,7 +210,7 @@ describe('Validating SocksProxyOptions', () => {
       validateSocksClientOptions({
         proxy: socksProxyInvalidPortBounds,
         command: socksCommandValid,
-        destination: socksRemoteHostValid
+        destination: socksRemoteHostValid,
       });
     }, SocksClientError);
   });
@@ -226,7 +220,7 @@ describe('Validating SocksProxyOptions', () => {
       validateSocksClientOptions({
         proxy: socksProxyInvalidPort,
         command: socksCommandValid,
-        destination: socksRemoteHostValid
+        destination: socksRemoteHostValid,
       });
     }, SocksClientError);
   });
@@ -236,7 +230,7 @@ describe('Validating SocksProxyOptions', () => {
       validateSocksClientOptions({
         proxy: socksProxyInvalidType,
         command: socksCommandValid,
-        destination: socksRemoteHostValid
+        destination: socksRemoteHostValid,
       });
     }, SocksClientError);
   });
@@ -246,7 +240,7 @@ describe('Validating SocksProxyOptions', () => {
       validateSocksClientOptions({
         proxy: socksProxyValid,
         command: socksCommandInvalid,
-        destination: socksRemoteHostValid
+        destination: socksRemoteHostValid,
       });
     }, SocksClientError);
   });
@@ -257,9 +251,9 @@ describe('Validating SocksProxyOptions', () => {
         {
           proxy: socksProxyValid,
           command: 'bind',
-          destination: socksRemoteHostValid
+          destination: socksRemoteHostValid,
         },
-        ['connect']
+        ['connect'],
       );
     }, SocksClientError);
   });
@@ -269,7 +263,7 @@ describe('Validating SocksProxyOptions', () => {
       validateSocksClientOptions({
         proxy: socksProxyValid,
         command: socksCommandValid,
-        destination: socksRemoteHostInvalidHost
+        destination: socksRemoteHostInvalidHost,
       });
     }, SocksClientError);
   });
@@ -279,7 +273,7 @@ describe('Validating SocksProxyOptions', () => {
       validateSocksClientOptions({
         proxy: socksProxyValid,
         command: socksCommandValid,
-        destination: socksremoteHostInvalidPort
+        destination: socksremoteHostInvalidPort,
       });
     }, SocksClientError);
   });
@@ -290,7 +284,7 @@ describe('Validating SocksProxyOptions', () => {
         proxy: socksProxyValid,
         command: socksCommandValid,
         destination: socksRemoteHostValid,
-        timeout: -1
+        timeout: -1,
       });
     }, SocksClientError);
   });
@@ -301,7 +295,7 @@ describe('Validating SocksProxyOptions', () => {
         proxy: socksProxyValid,
         command: socksCommandValid,
         destination: socksRemoteHostValid,
-        existing_socket: socketInvalid
+        existing_socket: socketInvalid,
       });
     }, SocksClientError);
   });
@@ -311,7 +305,7 @@ describe('Validating SocksProxyOptions', () => {
       command: socksCommandValid,
       destination: socksRemoteHostValid,
       timeout: 10000,
-      proxies: socksProxiesValid
+      proxies: socksProxiesValid,
     });
   });
 
@@ -321,7 +315,7 @@ describe('Validating SocksProxyOptions', () => {
         command: socksCommandValid,
         destination: socksRemoteHostValid,
         timeout: 10000,
-        proxies: socksProxiesInvalidLength
+        proxies: socksProxiesInvalidLength,
       });
     }, SocksClientError);
   });
@@ -332,7 +326,7 @@ describe('Validating SocksProxyOptions', () => {
         command: socksCommandValid,
         destination: socksRemoteHostValid,
         timeout: 10000,
-        proxies: socksProxiesInvalidMixed
+        proxies: socksProxiesInvalidMixed,
       });
     }, SocksClientError);
   });
@@ -343,7 +337,7 @@ describe('Validating SocksProxyOptions', () => {
         command: socksCommandValid,
         destination: socksRemoteHostValid,
         timeout: 10000,
-        proxies: socksProxiesInvalid
+        proxies: socksProxiesInvalid,
       });
     }, SocksClientError);
   });
@@ -354,7 +348,7 @@ describe('Validating SocksProxyOptions', () => {
         command: socksCommandInvalid,
         destination: socksRemoteHostValid,
         timeout: 10000,
-        proxies: socksProxiesValid
+        proxies: socksProxiesValid,
       });
     }, SocksClientError);
   });
@@ -365,7 +359,7 @@ describe('Validating SocksProxyOptions', () => {
         command: socksCommandValid,
         destination: socksRemoteHostValid,
         timeout: -1000,
-        proxies: socksProxiesValid
+        proxies: socksProxiesValid,
       });
     }, SocksClientError);
   });
@@ -376,7 +370,7 @@ describe('Validating SocksProxyOptions', () => {
         command: socksCommandValid,
         destination: socksRemoteHostInvalidHost,
         timeout: 10000,
-        proxies: socksProxiesValid
+        proxies: socksProxiesValid,
       });
     }, SocksClientError);
   });
