@@ -1,7 +1,7 @@
-import { EventEmitter } from 'events';
+import {EventEmitter} from 'events';
 import * as net from 'net';
 import * as ip from 'ip';
-import { SmartBuffer } from 'smart-buffer';
+import {SmartBuffer} from 'smart-buffer';
 import {
   DEFAULT_TIMEOUT,
   SocksCommand,
@@ -18,15 +18,15 @@ import {
   SocksClientEstablishedEvent,
   SocksUDPFrameDetails,
   ERRORS,
-  SOCKS_INCOMING_PACKET_SIZES
+  SOCKS_INCOMING_PACKET_SIZES,
 } from '../common/constants';
 import {
   validateSocksClientOptions,
-  validateSocksClientChainOptions
+  validateSocksClientChainOptions,
 } from '../common/helpers';
-import { ReceiveBuffer } from '../common/receivebuffer';
-import { SocksClientError, shuffleArray } from '../common/util';
-import { Duplex } from 'stream';
+import {ReceiveBuffer} from '../common/receivebuffer';
+import {SocksClientError, shuffleArray} from '../common/util';
+import {Duplex} from 'stream';
 
 // Exposes SocksClient event types
 declare interface SocksClient {
@@ -34,7 +34,7 @@ declare interface SocksClient {
   on(event: 'bound', listener: (info: SocksClientBoundEvent) => void): this;
   on(
     event: 'established',
-    listener: (info: SocksClientEstablishedEvent) => void
+    listener: (info: SocksClientEstablishedEvent) => void,
   ): this;
 
   once(event: string, listener: (...args: any[]) => void): this;
@@ -42,7 +42,7 @@ declare interface SocksClient {
   once(event: 'bound', listener: (info: SocksClientBoundEvent) => void): this;
   once(
     event: 'established',
-    listener: (info: SocksClientEstablishedEvent) => void
+    listener: (info: SocksClientEstablishedEvent) => void,
   ): this;
 
   emit(event: string | symbol, ...args: any[]): boolean;
@@ -52,31 +52,31 @@ declare interface SocksClient {
 }
 
 class SocksClient extends EventEmitter implements SocksClient {
-  private _options: SocksClientOptions;
-  private _socket: Duplex;
-  private _state: SocksClientState;
+  private options: SocksClientOptions;
+  private socket: Duplex;
+  private state: SocksClientState;
   // This is an internal ReceiveBuffer that holds all received data while we wait for enough data to process.
-  private _receiveBuffer: ReceiveBuffer;
+  private receiveBuffer: ReceiveBuffer;
   // This is the amount of data we need to receive before we can continue processing SOCKS handshake packets.
-  private _nextRequiredPacketBufferSize: number;
+  private nextRequiredPacketBufferSize: number;
 
   // Internal Socket data handlers
-  private _onDataReceived: (data: Buffer) => void;
-  private _onClose: (had_error: boolean) => void;
-  private _onError: (err: Error) => void;
-  private _onConnect: () => void;
+  private onDataReceived: (data: Buffer) => void;
+  private onClose: (hadError: boolean) => void;
+  private onError: (err: Error) => void;
+  private onConnect: () => void;
 
   constructor(options: SocksClientOptions) {
     super();
-    this._options = {
-      ...options
+    this.options = {
+      ...options,
     };
 
     // Validate SocksClientOptions
     validateSocksClientOptions(options);
 
     // Default state
-    this.state = SocksClientState.Created;
+    this.setState(SocksClientState.Created);
   }
 
   /**
@@ -89,7 +89,7 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   static createConnection(
     options: SocksClientOptions,
-    callback?: Function
+    callback?: Function,
   ): Promise<SocksClientEstablishedEvent> {
     // Validate SocksClientOptions
     validateSocksClientOptions(options, ['connect']);
@@ -131,7 +131,7 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   static createConnectionChain(
     options: SocksClientChainOptions,
-    callback?: Function
+    callback?: Function,
   ): Promise<SocksClientEstablishedEvent> {
     // Validate SocksClientChainOptions
     validateSocksClientChainOptions(options);
@@ -145,6 +145,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       let sock: net.Socket;
 
       try {
+        // tslint:disable-next-line:no-increment-decrement
         for (let i = 0; i < options.proxies.length; i++) {
           const nextProxy = options.proxies[i];
 
@@ -154,14 +155,14 @@ class SocksClient extends EventEmitter implements SocksClient {
               ? options.destination
               : {
                   host: options.proxies[i + 1].ipaddress,
-                  port: options.proxies[i + 1].port
+                  port: options.proxies[i + 1].port,
                 };
 
           // Creates the next connection in the chain.
           const result = await SocksClient.createConnection({
             command: 'connect',
             proxy: nextProxy,
-            destination: nextDestination
+            destination: nextDestination,
             // Initial connection ignores this as sock is undefined. Subsequent connections re-use the first proxy socket to form a chain.
           });
 
@@ -172,10 +173,10 @@ class SocksClient extends EventEmitter implements SocksClient {
         }
 
         if (typeof callback === 'function') {
-          callback(null, { socket: sock });
+          callback(null, {socket: sock});
           resolve(); // Resolves pending promise (prevents memory leaks).
         } else {
-          resolve({ socket: sock });
+          resolve({socket: sock});
         }
       } catch (err) {
         if (typeof callback === 'function') {
@@ -245,42 +246,35 @@ class SocksClient extends EventEmitter implements SocksClient {
       frameNumber,
       remoteHost: {
         host: remoteHost,
-        port: remotePort
+        port: remotePort,
       },
-      data: buff.readBuffer()
+      data: buff.readBuffer(),
     };
-  }
-
-  /**
-   * Gets the SocksClient internal state.
-   */
-  private get state() {
-    return this._state;
   }
 
   /**
    * Internal state setter. If the SocksClient is in an error state, it cannot be changed to a non error state.
    */
-  private set state(newState: SocksClientState) {
-    if (this._state !== SocksClientState.Error) {
-      this._state = newState;
+  private setState(newState: SocksClientState) {
+    if (this.state !== SocksClientState.Error) {
+      this.state = newState;
     }
   }
 
   /**
    * Starts the connection establishment to the proxy and destination.
-   * @param existing_socket Connected socket to use instead of creating a new one (internal use).
+   * @param existingSocket Connected socket to use instead of creating a new one (internal use).
    */
-  public connect(existing_socket?: Duplex) {
-    this._onDataReceived = (data: Buffer) => this.onDataReceived(data);
-    this._onClose = () => this.onClose();
-    this._onError = (err: Error) => this.onError(err);
-    this._onConnect = () => this.onConnect();
+  public connect(existingSocket?: Duplex) {
+    this.onDataReceived = (data: Buffer) => this.onDataReceivedHandler(data);
+    this.onClose = () => this.onCloseHandler();
+    this.onError = (err: Error) => this.onErrorHandler(err);
+    this.onConnect = () => this.onConnectHandler();
 
     // Start timeout timer (defaults to 30 seconds)
     const timer = setTimeout(
       () => this.onEstablishedTimeout(),
-      this._options.timeout || DEFAULT_TIMEOUT
+      this.options.timeout || DEFAULT_TIMEOUT,
     );
 
     // check whether unref is available as it differs from browser to NodeJS (#33)
@@ -289,43 +283,39 @@ class SocksClient extends EventEmitter implements SocksClient {
     }
 
     // If an existing socket is provided, use it to negotiate SOCKS handshake. Otherwise create a new Socket.
-    if (existing_socket) {
-      this._socket = existing_socket;
+    if (existingSocket) {
+      this.socket = existingSocket;
     } else {
-      this._socket = new net.Socket();
+      this.socket = new net.Socket();
     }
 
     // Attach Socket error handlers.
-    this._socket.once('close', this._onClose);
-    this._socket.once('error', this._onError);
-    this._socket.once('connect', this._onConnect);
-    this._socket.on('data', this._onDataReceived);
+    this.socket.once('close', this.onClose);
+    this.socket.once('error', this.onError);
+    this.socket.once('connect', this.onConnect);
+    this.socket.on('data', this.onDataReceived);
 
-    this.state = SocksClientState.Connecting;
-    this._receiveBuffer = new ReceiveBuffer();
+    this.setState(SocksClientState.Connecting);
+    this.receiveBuffer = new ReceiveBuffer();
 
-    if (existing_socket) {
-      this._socket.emit('connect');
+    if (existingSocket) {
+      this.socket.emit('connect');
     } else {
-      (this._socket as net.Socket).connect(this.getSocketOptions());
+      (this.socket as net.Socket).connect(this.getSocketOptions());
 
       if (
-        this._options.set_tcp_nodelay !== undefined &&
-        this._options.set_tcp_nodelay !== null
+        this.options.set_tcp_nodelay !== undefined &&
+        this.options.set_tcp_nodelay !== null
       ) {
-        (this._socket as net.Socket).setNoDelay(
-          !!this._options.set_tcp_nodelay
-        );
+        (this.socket as net.Socket).setNoDelay(!!this.options.set_tcp_nodelay);
       }
     }
 
     // Listen for established event so we can re-emit any excess data received during handshakes.
-    this.prependOnceListener('established', info => {
+    this.prependOnceListener('established', (info) => {
       setImmediate(() => {
-        if (this._receiveBuffer.length > 0) {
-          const excessData = this._receiveBuffer.get(
-            this._receiveBuffer.length
-          );
+        if (this.receiveBuffer.length > 0) {
+          const excessData = this.receiveBuffer.get(this.receiveBuffer.length);
 
           info.socket.emit('data', excessData);
         }
@@ -337,9 +327,9 @@ class SocksClient extends EventEmitter implements SocksClient {
   // Socket options (defaults host/port to options.proxy.host/options.proxy.port)
   private getSocketOptions(): net.SocketConnectOpts {
     return {
-      ...this._options.socket_options,
-      host: this._options.proxy.host || this._options.proxy.ipaddress,
-      port: this._options.proxy.port
+      ...this.options.socket_options,
+      host: this.options.proxy.host || this.options.proxy.ipaddress,
+      port: this.options.proxy.port,
     };
   }
 
@@ -352,36 +342,36 @@ class SocksClient extends EventEmitter implements SocksClient {
       this.state !== SocksClientState.Established &&
       this.state !== SocksClientState.BoundWaitingForConnection
     ) {
-      this._closeSocket(ERRORS.ProxyConnectionTimedOut);
+      this.closeSocket(ERRORS.ProxyConnectionTimedOut);
     }
   }
 
   /**
    * Handles Socket connect event.
    */
-  private onConnect() {
-    this.state = SocksClientState.Connected;
+  private onConnectHandler() {
+    this.setState(SocksClientState.Connected);
 
     // Send initial handshake.
-    if (this._options.proxy.type === 4) {
+    if (this.options.proxy.type === 4) {
       this.sendSocks4InitialHandshake();
     } else {
       this.sendSocks5InitialHandshake();
     }
 
-    this.state = SocksClientState.SentInitialHandshake;
+    this.setState(SocksClientState.SentInitialHandshake);
   }
 
   /**
    * Handles Socket data event.
    * @param data
    */
-  private onDataReceived(data: Buffer) {
+  private onDataReceivedHandler(data: Buffer) {
     /*
       All received data is appended to a ReceiveBuffer.
       This makes sure that all the data we need is received before we attempt to process it.
     */
-    this._receiveBuffer.append(data);
+    this.receiveBuffer.append(data);
 
     // Process data that we have.
     this.processData();
@@ -392,10 +382,10 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   private processData() {
     // If we have enough data to process the next step in the SOCKS handshake, proceed.
-    if (this._receiveBuffer.length >= this._nextRequiredPacketBufferSize) {
+    if (this.receiveBuffer.length >= this.nextRequiredPacketBufferSize) {
       // Sent initial handshake, waiting for response.
       if (this.state === SocksClientState.SentInitialHandshake) {
-        if (this._options.proxy.type === 4) {
+        if (this.options.proxy.type === 4) {
           // Socks v4 only has one handshake response.
           this.handleSocks4FinalHandshakeResponse();
         } else {
@@ -410,7 +400,7 @@ class SocksClient extends EventEmitter implements SocksClient {
         this.handleSocks5FinalHandshakeResponse();
         // Socks BIND established. Waiting for remote connection via proxy.
       } else if (this.state === SocksClientState.BoundWaitingForConnection) {
-        if (this._options.proxy.type === 4) {
+        if (this.options.proxy.type === 4) {
           this.handleSocks4IncomingConnectionResponse();
         } else {
           this.handleSocks5IncomingConnectionResponse();
@@ -418,7 +408,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       } else if (this.state === SocksClientState.Established) {
         // do nothing (prevents closing of the socket)
       } else {
-        this._closeSocket(ERRORS.InternalError);
+        this.closeSocket(ERRORS.InternalError);
       }
     }
   }
@@ -427,16 +417,16 @@ class SocksClient extends EventEmitter implements SocksClient {
    * Handles Socket close event.
    * @param had_error
    */
-  private onClose() {
-    this._closeSocket(ERRORS.SocketClosed);
+  private onCloseHandler() {
+    this.closeSocket(ERRORS.SocketClosed);
   }
 
   /**
    * Handles Socket error event.
    * @param err
    */
-  private onError(err: Error) {
-    this._closeSocket(err.message);
+  private onErrorHandler(err: Error) {
+    this.closeSocket(err.message);
   }
 
   /**
@@ -444,31 +434,31 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   private removeInternalSocketHandlers() {
     // Pauses data flow of the socket (this is internally resumed after 'established' is emitted)
-    this._socket.pause();
-    this._socket.removeListener('data', this._onDataReceived);
-    this._socket.removeListener('close', this._onClose);
-    this._socket.removeListener('error', this._onError);
-    this._socket.removeListener('connect', this.onConnect);
+    this.socket.pause();
+    this.socket.removeListener('data', this.onDataReceived);
+    this.socket.removeListener('close', this.onClose);
+    this.socket.removeListener('error', this.onError);
+    this.socket.removeListener('connect', this.onConnect);
   }
 
   /**
    * Closes and destroys the underlying Socket. Emits an error event.
    * @param err { String } An error string to include in error event.
    */
-  private _closeSocket(err: string) {
+  private closeSocket(err: string) {
     // Make sure only one 'error' event is fired for the lifetime of this SocksClient instance.
     if (this.state !== SocksClientState.Error) {
       // Set internal state to Error.
-      this.state = SocksClientState.Error;
+      this.setState(SocksClientState.Error);
 
       // Destroy Socket
-      this._socket.destroy();
+      this.socket.destroy();
 
       // Remove internal listeners
       this.removeInternalSocketHandlers();
 
       // Fire 'error' event.
-      this.emit('error', new SocksClientError(err, this._options));
+      this.emit('error', new SocksClientError(err, this.options));
     }
   }
 
@@ -476,16 +466,16 @@ class SocksClient extends EventEmitter implements SocksClient {
    * Sends initial Socks v4 handshake request.
    */
   private sendSocks4InitialHandshake() {
-    const userId = this._options.proxy.userId || '';
+    const userId = this.options.proxy.userId || '';
 
     const buff = new SmartBuffer();
     buff.writeUInt8(0x04);
-    buff.writeUInt8(SocksCommand[this._options.command]);
-    buff.writeUInt16BE(this._options.destination.port);
+    buff.writeUInt8(SocksCommand[this.options.command]);
+    buff.writeUInt16BE(this.options.destination.port);
 
     // Socks 4 (IPv4)
-    if (net.isIPv4(this._options.destination.host)) {
-      buff.writeBuffer(ip.toBuffer(this._options.destination.host));
+    if (net.isIPv4(this.options.destination.host)) {
+      buff.writeBuffer(ip.toBuffer(this.options.destination.host));
       buff.writeStringNT(userId);
       // Socks 4a (hostname)
     } else {
@@ -494,12 +484,12 @@ class SocksClient extends EventEmitter implements SocksClient {
       buff.writeUInt8(0x00);
       buff.writeUInt8(0x01);
       buff.writeStringNT(userId);
-      buff.writeStringNT(this._options.destination.host);
+      buff.writeStringNT(this.options.destination.host);
     }
 
-    this._nextRequiredPacketBufferSize =
+    this.nextRequiredPacketBufferSize =
       SOCKS_INCOMING_PACKET_SIZES.Socks4Response;
-    this._socket.write(buff.toBuffer());
+    this.socket.write(buff.toBuffer());
   }
 
   /**
@@ -507,35 +497,37 @@ class SocksClient extends EventEmitter implements SocksClient {
    * @param data
    */
   private handleSocks4FinalHandshakeResponse() {
-    const data = this._receiveBuffer.get(8);
+    const data = this.receiveBuffer.get(8);
 
     if (data[1] !== Socks4Response.Granted) {
-      this._closeSocket(
-        `${ERRORS.Socks4ProxyRejectedConnection} - (${Socks4Response[data[1]]})`
+      this.closeSocket(
+        `${ERRORS.Socks4ProxyRejectedConnection} - (${
+          Socks4Response[data[1]]
+        })`,
       );
     } else {
       // Bind response
-      if (SocksCommand[this._options.command] === SocksCommand.bind) {
+      if (SocksCommand[this.options.command] === SocksCommand.bind) {
         const buff = SmartBuffer.fromBuffer(data);
         buff.readOffset = 2;
 
         const remoteHost: SocksRemoteHost = {
           port: buff.readUInt16BE(),
-          host: ip.fromLong(buff.readUInt32BE())
+          host: ip.fromLong(buff.readUInt32BE()),
         };
 
         // If host is 0.0.0.0, set to proxy host.
         if (remoteHost.host === '0.0.0.0') {
-          remoteHost.host = this._options.proxy.ipaddress;
+          remoteHost.host = this.options.proxy.ipaddress;
         }
-        this.state = SocksClientState.BoundWaitingForConnection;
-        this.emit('bound', { socket: this._socket, remoteHost });
+        this.setState(SocksClientState.BoundWaitingForConnection);
+        this.emit('bound', {remoteHost, socket: this.socket});
 
         // Connect response
       } else {
-        this.state = SocksClientState.Established;
+        this.setState(SocksClientState.Established);
         this.removeInternalSocketHandlers();
-        this.emit('established', { socket: this._socket });
+        this.emit('established', {socket: this.socket});
       }
     }
   }
@@ -545,13 +537,13 @@ class SocksClient extends EventEmitter implements SocksClient {
    * @param data
    */
   private handleSocks4IncomingConnectionResponse() {
-    const data = this._receiveBuffer.get(8);
+    const data = this.receiveBuffer.get(8);
 
     if (data[1] !== Socks4Response.Granted) {
-      this._closeSocket(
+      this.closeSocket(
         `${ERRORS.Socks4ProxyRejectedIncomingBoundConnection} - (${
           Socks4Response[data[1]]
-        })`
+        })`,
       );
     } else {
       const buff = SmartBuffer.fromBuffer(data);
@@ -559,12 +551,12 @@ class SocksClient extends EventEmitter implements SocksClient {
 
       const remoteHost: SocksRemoteHost = {
         port: buff.readUInt16BE(),
-        host: ip.fromLong(buff.readUInt32BE())
+        host: ip.fromLong(buff.readUInt32BE()),
       };
 
-      this.state = SocksClientState.Established;
+      this.setState(SocksClientState.Established);
       this.removeInternalSocketHandlers();
-      this.emit('established', { socket: this._socket, remoteHost });
+      this.emit('established', {remoteHost, socket: this.socket});
     }
   }
 
@@ -577,7 +569,7 @@ class SocksClient extends EventEmitter implements SocksClient {
 
     // We should only tell the proxy we support user/pass auth if auth info is actually provided.
     // Note: As of Tor v0.3.5.7+, if user/pass auth is an option from the client, by default it will always take priority.
-    if (this._options.proxy.userId || this._options.proxy.password) {
+    if (this.options.proxy.userId || this.options.proxy.password) {
       buff.writeUInt8(2);
       buff.writeUInt8(Socks5Auth.NoAuth);
       buff.writeUInt8(Socks5Auth.UserPass);
@@ -586,10 +578,10 @@ class SocksClient extends EventEmitter implements SocksClient {
       buff.writeUInt8(Socks5Auth.NoAuth);
     }
 
-    this._nextRequiredPacketBufferSize =
+    this.nextRequiredPacketBufferSize =
       SOCKS_INCOMING_PACKET_SIZES.Socks5InitialHandshakeResponse;
-    this._socket.write(buff.toBuffer());
-    this.state = SocksClientState.SentInitialHandshake;
+    this.socket.write(buff.toBuffer());
+    this.setState(SocksClientState.SentInitialHandshake);
   }
 
   /**
@@ -597,12 +589,12 @@ class SocksClient extends EventEmitter implements SocksClient {
    * @param data
    */
   private handleInitialSocks5HandshakeResponse() {
-    const data = this._receiveBuffer.get(2);
+    const data = this.receiveBuffer.get(2);
 
     if (data[0] !== 0x05) {
-      this._closeSocket(ERRORS.InvalidSocks5IntiailHandshakeSocksVersion);
+      this.closeSocket(ERRORS.InvalidSocks5IntiailHandshakeSocksVersion);
     } else if (data[1] === 0xff) {
-      this._closeSocket(ERRORS.InvalidSocks5InitialHandshakeNoAcceptedAuthType);
+      this.closeSocket(ERRORS.InvalidSocks5InitialHandshakeNoAcceptedAuthType);
     } else {
       // If selected Socks v5 auth method is no auth, send final handshake request.
       if (data[1] === Socks5Auth.NoAuth) {
@@ -611,7 +603,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       } else if (data[1] === Socks5Auth.UserPass) {
         this.sendSocks5UserPassAuthentication();
       } else {
-        this._closeSocket(ERRORS.InvalidSocks5InitialHandshakeUnknownAuthType);
+        this.closeSocket(ERRORS.InvalidSocks5InitialHandshakeUnknownAuthType);
       }
     }
   }
@@ -622,8 +614,8 @@ class SocksClient extends EventEmitter implements SocksClient {
    * Note: No auth and user/pass are currently supported.
    */
   private sendSocks5UserPassAuthentication() {
-    const userId = this._options.proxy.userId || '';
-    const password = this._options.proxy.password || '';
+    const userId = this.options.proxy.userId || '';
+    const password = this.options.proxy.password || '';
 
     const buff = new SmartBuffer();
     buff.writeUInt8(0x01);
@@ -632,10 +624,10 @@ class SocksClient extends EventEmitter implements SocksClient {
     buff.writeUInt8(Buffer.byteLength(password));
     buff.writeString(password);
 
-    this._nextRequiredPacketBufferSize =
+    this.nextRequiredPacketBufferSize =
       SOCKS_INCOMING_PACKET_SIZES.Socks5UserPassAuthenticationResponse;
-    this._socket.write(buff.toBuffer());
-    this.state = SocksClientState.SentAuthentication;
+    this.socket.write(buff.toBuffer());
+    this.setState(SocksClientState.SentAuthentication);
   }
 
   /**
@@ -643,12 +635,12 @@ class SocksClient extends EventEmitter implements SocksClient {
    * @param data
    */
   private handleInitialSocks5AuthenticationHandshakeResponse() {
-    this.state = SocksClientState.ReceivedAuthenticationResponse;
+    this.setState(SocksClientState.ReceivedAuthenticationResponse);
 
-    const data = this._receiveBuffer.get(2);
+    const data = this.receiveBuffer.get(2);
 
     if (data[1] !== 0x00) {
-      this._closeSocket(ERRORS.Socks5AuthenticationFailed);
+      this.closeSocket(ERRORS.Socks5AuthenticationFailed);
     } else {
       this.sendSocks5CommandRequest();
     }
@@ -661,27 +653,27 @@ class SocksClient extends EventEmitter implements SocksClient {
     const buff = new SmartBuffer();
 
     buff.writeUInt8(0x05);
-    buff.writeUInt8(SocksCommand[this._options.command]);
+    buff.writeUInt8(SocksCommand[this.options.command]);
     buff.writeUInt8(0x00);
 
     // ipv4, ipv6, domain?
-    if (net.isIPv4(this._options.destination.host)) {
+    if (net.isIPv4(this.options.destination.host)) {
       buff.writeUInt8(Socks5HostType.IPv4);
-      buff.writeBuffer(ip.toBuffer(this._options.destination.host));
-    } else if (net.isIPv6(this._options.destination.host)) {
+      buff.writeBuffer(ip.toBuffer(this.options.destination.host));
+    } else if (net.isIPv6(this.options.destination.host)) {
       buff.writeUInt8(Socks5HostType.IPv6);
-      buff.writeBuffer(ip.toBuffer(this._options.destination.host));
+      buff.writeBuffer(ip.toBuffer(this.options.destination.host));
     } else {
       buff.writeUInt8(Socks5HostType.Hostname);
-      buff.writeUInt8(this._options.destination.host.length);
-      buff.writeString(this._options.destination.host);
+      buff.writeUInt8(this.options.destination.host.length);
+      buff.writeString(this.options.destination.host);
     }
-    buff.writeUInt16BE(this._options.destination.port);
+    buff.writeUInt16BE(this.options.destination.port);
 
-    this._nextRequiredPacketBufferSize =
+    this.nextRequiredPacketBufferSize =
       SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHeader;
-    this._socket.write(buff.toBuffer());
-    this.state = SocksClientState.SentFinalHandshake;
+    this.socket.write(buff.toBuffer());
+    this.setState(SocksClientState.SentFinalHandshake);
   }
 
   /**
@@ -690,13 +682,13 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   private handleSocks5FinalHandshakeResponse() {
     // Peek at available data (we need at least 5 bytes to get the hostname length)
-    const header = this._receiveBuffer.peek(5);
+    const header = this.receiveBuffer.peek(5);
 
     if (header[0] !== 0x05 || header[1] !== Socks5Response.Granted) {
-      this._closeSocket(
+      this.closeSocket(
         `${ERRORS.InvalidSocks5FinalHandshakeRejected} - ${
           Socks5Response[header[1]]
-        }`
+        }`,
       );
     } else {
       // Read address type
@@ -709,90 +701,93 @@ class SocksClient extends EventEmitter implements SocksClient {
       if (addressType === Socks5HostType.IPv4) {
         // Check if data is available.
         const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv4;
-        if (this._receiveBuffer.length < dataNeeded) {
-          this._nextRequiredPacketBufferSize = dataNeeded;
+        if (this.receiveBuffer.length < dataNeeded) {
+          this.nextRequiredPacketBufferSize = dataNeeded;
           return;
         }
 
         buff = SmartBuffer.fromBuffer(
-          this._receiveBuffer.get(dataNeeded).slice(4)
+          this.receiveBuffer.get(dataNeeded).slice(4),
         );
 
         remoteHost = {
           host: ip.fromLong(buff.readUInt32BE()),
-          port: buff.readUInt16BE()
+          port: buff.readUInt16BE(),
         };
 
         // If given host is 0.0.0.0, assume remote proxy ip instead.
         if (remoteHost.host === '0.0.0.0') {
-          remoteHost.host = this._options.proxy.ipaddress;
+          remoteHost.host = this.options.proxy.ipaddress;
         }
 
         // Hostname
       } else if (addressType === Socks5HostType.Hostname) {
         const hostLength = header[4];
         const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHostname(
-          hostLength
+          hostLength,
         ); // header + host length + host + port
 
         // Check if data is available.
-        if (this._receiveBuffer.length < dataNeeded) {
-          this._nextRequiredPacketBufferSize = dataNeeded;
+        if (this.receiveBuffer.length < dataNeeded) {
+          this.nextRequiredPacketBufferSize = dataNeeded;
           return;
         }
 
         buff = SmartBuffer.fromBuffer(
-          this._receiveBuffer.get(dataNeeded).slice(5) // Slice at 5 to skip host length
+          this.receiveBuffer.get(dataNeeded).slice(5), // Slice at 5 to skip host length
         );
 
         remoteHost = {
           host: buff.readString(hostLength),
-          port: buff.readUInt16BE()
+          port: buff.readUInt16BE(),
         };
         // IPv6
       } else if (addressType === Socks5HostType.IPv6) {
         // Check if data is available.
         const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv6;
-        if (this._receiveBuffer.length < dataNeeded) {
-          this._nextRequiredPacketBufferSize = dataNeeded;
+        if (this.receiveBuffer.length < dataNeeded) {
+          this.nextRequiredPacketBufferSize = dataNeeded;
           return;
         }
 
         buff = SmartBuffer.fromBuffer(
-          this._receiveBuffer.get(dataNeeded).slice(4)
+          this.receiveBuffer.get(dataNeeded).slice(4),
         );
 
         remoteHost = {
           host: ip.toString(buff.readBuffer(16)),
-          port: buff.readUInt16BE()
+          port: buff.readUInt16BE(),
         };
       }
 
       // We have everything we need
-      this.state = SocksClientState.ReceivedFinalResponse;
+      this.setState(SocksClientState.ReceivedFinalResponse);
 
       // If using CONNECT, the client is now in the established state.
-      if (SocksCommand[this._options.command] === SocksCommand.connect) {
-        this.state = SocksClientState.Established;
+      if (SocksCommand[this.options.command] === SocksCommand.connect) {
+        this.setState(SocksClientState.Established);
         this.removeInternalSocketHandlers();
-        this.emit('established', { socket: this._socket });
-      } else if (SocksCommand[this._options.command] === SocksCommand.bind) {
+        this.emit('established', {socket: this.socket});
+      } else if (SocksCommand[this.options.command] === SocksCommand.bind) {
         /* If using BIND, the Socks client is now in BoundWaitingForConnection state.
            This means that the remote proxy server is waiting for a remote connection to the bound port. */
-        this.state = SocksClientState.BoundWaitingForConnection;
-        this._nextRequiredPacketBufferSize =
+        this.setState(SocksClientState.BoundWaitingForConnection);
+        this.nextRequiredPacketBufferSize =
           SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHeader;
-        this.emit('bound', { socket: this._socket, remoteHost });
+        this.emit('bound', {remoteHost, socket: this.socket});
         /*
           If using Associate, the Socks client is now Established. And the proxy server is now accepting UDP packets at the
           given bound port. This initial Socks TCP connection must remain open for the UDP relay to continue to work.
         */
       } else if (
-        SocksCommand[this._options.command] === SocksCommand.associate
+        SocksCommand[this.options.command] === SocksCommand.associate
       ) {
-        this.state = SocksClientState.Established;
+        this.setState(SocksClientState.Established);
         this.removeInternalSocketHandlers();
-        this.emit('established', { socket: this._socket, remoteHost });
+        this.emit('established', {
+          remoteHost,
+          socket: this.socket,
+        });
       }
     }
   }
@@ -802,13 +797,13 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   private handleSocks5IncomingConnectionResponse() {
     // Peek at available data (we need at least 5 bytes to get the hostname length)
-    const header = this._receiveBuffer.peek(5);
+    const header = this.receiveBuffer.peek(5);
 
     if (header[0] !== 0x05 || header[1] !== Socks5Response.Granted) {
-      this._closeSocket(
+      this.closeSocket(
         `${ERRORS.Socks5ProxyRejectedIncomingBoundConnection} - ${
           Socks5Response[header[1]]
-        }`
+        }`,
       );
     } else {
       // Read address type
@@ -821,74 +816,74 @@ class SocksClient extends EventEmitter implements SocksClient {
       if (addressType === Socks5HostType.IPv4) {
         // Check if data is available.
         const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv4;
-        if (this._receiveBuffer.length < dataNeeded) {
-          this._nextRequiredPacketBufferSize = dataNeeded;
+        if (this.receiveBuffer.length < dataNeeded) {
+          this.nextRequiredPacketBufferSize = dataNeeded;
           return;
         }
 
         buff = SmartBuffer.fromBuffer(
-          this._receiveBuffer.get(dataNeeded).slice(4)
+          this.receiveBuffer.get(dataNeeded).slice(4),
         );
 
         remoteHost = {
           host: ip.fromLong(buff.readUInt32BE()),
-          port: buff.readUInt16BE()
+          port: buff.readUInt16BE(),
         };
 
         // If given host is 0.0.0.0, assume remote proxy ip instead.
         if (remoteHost.host === '0.0.0.0') {
-          remoteHost.host = this._options.proxy.ipaddress;
+          remoteHost.host = this.options.proxy.ipaddress;
         }
 
         // Hostname
       } else if (addressType === Socks5HostType.Hostname) {
         const hostLength = header[4];
         const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHostname(
-          hostLength
+          hostLength,
         ); // header + host length + port
 
         // Check if data is available.
-        if (this._receiveBuffer.length < dataNeeded) {
-          this._nextRequiredPacketBufferSize = dataNeeded;
+        if (this.receiveBuffer.length < dataNeeded) {
+          this.nextRequiredPacketBufferSize = dataNeeded;
           return;
         }
 
         buff = SmartBuffer.fromBuffer(
-          this._receiveBuffer.get(dataNeeded).slice(5) // Slice at 5 to skip host length
+          this.receiveBuffer.get(dataNeeded).slice(5), // Slice at 5 to skip host length
         );
 
         remoteHost = {
           host: buff.readString(hostLength),
-          port: buff.readUInt16BE()
+          port: buff.readUInt16BE(),
         };
         // IPv6
       } else if (addressType === Socks5HostType.IPv6) {
         // Check if data is available.
         const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseIPv6;
-        if (this._receiveBuffer.length < dataNeeded) {
-          this._nextRequiredPacketBufferSize = dataNeeded;
+        if (this.receiveBuffer.length < dataNeeded) {
+          this.nextRequiredPacketBufferSize = dataNeeded;
           return;
         }
 
         buff = SmartBuffer.fromBuffer(
-          this._receiveBuffer.get(dataNeeded).slice(4)
+          this.receiveBuffer.get(dataNeeded).slice(4),
         );
 
         remoteHost = {
           host: ip.toString(buff.readBuffer(16)),
-          port: buff.readUInt16BE()
+          port: buff.readUInt16BE(),
         };
       }
 
-      this.state = SocksClientState.Established;
+      this.setState(SocksClientState.Established);
       this.removeInternalSocketHandlers();
-      this.emit('established', { socket: this._socket, remoteHost });
+      this.emit('established', {remoteHost, socket: this.socket});
     }
   }
 
   get socksClientOptions(): SocksClientOptions {
     return {
-      ...this._options
+      ...this.options,
     };
   }
 }
@@ -900,5 +895,5 @@ export {
   SocksClientError,
   SocksRemoteHost,
   SocksProxy,
-  SocksUDPFrameDetails
+  SocksUDPFrameDetails,
 };

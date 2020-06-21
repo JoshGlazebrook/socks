@@ -1,4 +1,4 @@
-import { SocksClientOptions, SocksClientChainOptions } from './constants';
+import {SocksClientOptions, SocksClientChainOptions} from './constants';
 
 /**
  * Error wrapper for SocksClient
@@ -6,7 +6,7 @@ import { SocksClientOptions, SocksClientChainOptions } from './constants';
 class SocksClientError extends Error {
   constructor(
     message: string,
-    public options: SocksClientOptions | SocksClientChainOptions
+    public options: SocksClientOptions | SocksClientChainOptions,
   ) {
     super(message);
   }
@@ -17,8 +17,9 @@ class SocksClientError extends Error {
  * @param array The array to shuffle.
  */
 function shuffleArray(array: any[]) {
+  // tslint:disable-next-line:no-increment-decrement
   for (let i = array.length - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
   }
 }
@@ -33,4 +34,4 @@ type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<
       Partial<Record<Exclude<Keys, K>, undefined>>;
   }[Keys];
 
-export { RequireOnlyOne, SocksClientError, shuffleArray };
+export {RequireOnlyOne, SocksClientError, shuffleArray};

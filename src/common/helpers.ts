@@ -1,10 +1,10 @@
 import {
   SocksClientOptions,
   SocksClientChainOptions,
-  SocksRemoteHost
+  SocksRemoteHost,
 } from '../client/socksclient';
-import { SocksClientError } from './util';
-import { ERRORS, SocksCommand, SocksProxy } from './constants';
+import {SocksClientError} from './util';
+import {ERRORS, SocksCommand, SocksProxy} from './constants';
 import * as stream from 'stream';
 
 /**
@@ -14,7 +14,7 @@ import * as stream from 'stream';
  */
 function validateSocksClientOptions(
   options: SocksClientOptions,
-  acceptedCommands = ['connect', 'bind', 'associate']
+  acceptedCommands = ['connect', 'bind', 'associate'],
 ) {
   // Check SOCKs command option.
   if (!SocksCommand[options.command]) {
@@ -30,7 +30,7 @@ function validateSocksClientOptions(
   if (!isValidSocksRemoteHost(options.destination)) {
     throw new SocksClientError(
       ERRORS.InvalidSocksClientOptionsDestination,
-      options
+      options,
     );
   }
 
@@ -43,7 +43,7 @@ function validateSocksClientOptions(
   if (options.timeout && !isValidTimeoutValue(options.timeout)) {
     throw new SocksClientError(
       ERRORS.InvalidSocksClientOptionsTimeout,
-      options
+      options,
     );
   }
 
@@ -54,7 +54,7 @@ function validateSocksClientOptions(
   ) {
     throw new SocksClientError(
       ERRORS.InvalidSocksClientOptionsExistingSocket,
-      options
+      options,
     );
   }
 }
@@ -73,7 +73,7 @@ function validateSocksClientChainOptions(options: SocksClientChainOptions) {
   if (!isValidSocksRemoteHost(options.destination)) {
     throw new SocksClientError(
       ERRORS.InvalidSocksClientOptionsDestination,
-      options
+      options,
     );
   }
 
@@ -87,7 +87,7 @@ function validateSocksClientChainOptions(options: SocksClientChainOptions) {
   ) {
     throw new SocksClientError(
       ERRORS.InvalidSocksClientOptionsProxiesLength,
-      options
+      options,
     );
   }
 
@@ -96,7 +96,7 @@ function validateSocksClientChainOptions(options: SocksClientChainOptions) {
     if (!isValidSocksProxy(proxy)) {
       throw new SocksClientError(
         ERRORS.InvalidSocksClientOptionsProxy,
-        options
+        options,
       );
     }
   });
@@ -105,7 +105,7 @@ function validateSocksClientChainOptions(options: SocksClientChainOptions) {
   if (options.timeout && !isValidTimeoutValue(options.timeout)) {
     throw new SocksClientError(
       ERRORS.InvalidSocksClientOptionsTimeout,
-      options
+      options,
     );
   }
 }
@@ -147,4 +147,4 @@ function isValidTimeoutValue(value: number) {
   return typeof value === 'number' && value > 0;
 }
 
-export { validateSocksClientOptions, validateSocksClientChainOptions };
+export {validateSocksClientOptions, validateSocksClientChainOptions};
