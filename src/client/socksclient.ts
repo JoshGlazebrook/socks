@@ -382,7 +382,10 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   private processData() {
     // If we have enough data to process the next step in the SOCKS handshake, proceed.
-    if (this.receiveBuffer.length >= this.nextRequiredPacketBufferSize) {
+    while (
+      this.state !== SocksClientState.Established &&
+      this.receiveBuffer.length >= this.nextRequiredPacketBufferSize
+    ) {
       // Sent initial handshake, waiting for response.
       if (this.state === SocksClientState.SentInitialHandshake) {
         if (this.options.proxy.type === 4) {
@@ -405,8 +408,6 @@ class SocksClient extends EventEmitter implements SocksClient {
         } else {
           this.handleSocks5IncomingConnectionResponse();
         }
-      } else if (this.state === SocksClientState.Established) {
-        // do nothing (prevents closing of the socket)
       } else {
         this.closeSocket(ERRORS.InternalError);
       }
