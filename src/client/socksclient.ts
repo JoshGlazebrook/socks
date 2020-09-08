@@ -410,6 +410,7 @@ class SocksClient extends EventEmitter implements SocksClient {
         }
       } else {
         this.closeSocket(ERRORS.InternalError);
+	break;
       }
     }
   }
