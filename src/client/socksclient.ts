@@ -384,6 +384,7 @@ class SocksClient extends EventEmitter implements SocksClient {
     // If we have enough data to process the next step in the SOCKS handshake, proceed.
     while (
       this.state !== SocksClientState.Established &&
+      this.state !== SocksClientState.Error &&
       this.receiveBuffer.length >= this.nextRequiredPacketBufferSize
     ) {
       // Sent initial handshake, waiting for response.
