@@ -91,10 +91,19 @@ class SocksClient extends EventEmitter implements SocksClient {
     options: SocksClientOptions,
     callback?: Function,
   ): Promise<SocksClientEstablishedEvent> {
-    // Validate SocksClientOptions
-    validateSocksClientOptions(options, ['connect']);
-
     return new Promise<SocksClientEstablishedEvent>((resolve, reject) => {
+      // Validate SocksClientOptions
+      try {
+        validateSocksClientOptions(options, ['connect']);
+      } catch (err) {
+        if (typeof callback === 'function') {
+          callback(err);
+          return resolve(); // Resolves pending promise (prevents memory leaks).
+        } else {
+          return reject(err);
+        }
+      }
+
       const client = new SocksClient(options);
       client.connect(options.existing_socket);
       client.once('established', (info: SocksClientEstablishedEvent) => {
@@ -133,16 +142,25 @@ class SocksClient extends EventEmitter implements SocksClient {
     options: SocksClientChainOptions,
     callback?: Function,
   ): Promise<SocksClientEstablishedEvent> {
-    // Validate SocksClientChainOptions
-    validateSocksClientChainOptions(options);
-
-    // Shuffle proxies
-    if (options.randomizeChain) {
-      shuffleArray(options.proxies);
-    }
-
     return new Promise<SocksClientEstablishedEvent>(async (resolve, reject) => {
+      // Validate SocksClientChainOptions
+      try {
+        validateSocksClientChainOptions(options);
+      } catch (err) {
+        if (typeof callback === 'function') {
+          callback(err);
+          return resolve(); // Resolves pending promise (prevents memory leaks).
+        } else {
+          return reject(err);
+        }
+      }
+
       let sock: net.Socket;
+
+      // Shuffle proxies
+      if (options.randomizeChain) {
+        shuffleArray(options.proxies);
+      }
 
       try {
         // tslint:disable-next-line:no-increment-decrement

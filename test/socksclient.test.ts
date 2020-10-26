@@ -1,5 +1,5 @@
 import {SocksClient} from '../src/client/socksclient';
-import {assert} from 'chai';
+import * as assert from 'assert';
 import 'mocha';
 import {SocksRemoteHost, SocksProxy} from '../src/common/constants';
 import {SocksClientError, shuffleArray} from '../src/common/util';
@@ -50,9 +50,9 @@ describe('Creating and parsing Socks UDP frames', () => {
   });
 
   it('should generate valid UDP frames', () => {
-    assert.deepEqual(ipv4UDPFrame, validIPv4Frame);
-    assert.deepEqual(ipv6UDPFrame, validIPv6Frame);
-    assert.deepEqual(hostnameUDPFrame, validHostnameFrame);
+    assert.deepStrictEqual(ipv4UDPFrame, validIPv4Frame);
+    assert.deepStrictEqual(ipv6UDPFrame, validIPv6Frame);
+    assert.deepStrictEqual(hostnameUDPFrame, validHostnameFrame);
   });
 
   it('should parse generated UDP frames back to input values', () => {
@@ -61,19 +61,19 @@ describe('Creating and parsing Socks UDP frames', () => {
     const parsedHostnameUDPFrame = SocksClient.parseUDPFrame(hostnameUDPFrame);
 
     // IPv4
-    assert.deepEqual(parsedIPv4UDPFrame.remoteHost, ipv4HostInfo);
-    assert.deepEqual(parsedIPv4UDPFrame.frameNumber, 0);
-    assert.deepEqual(parsedIPv4UDPFrame.data, packetData);
+    assert.deepStrictEqual(parsedIPv4UDPFrame.remoteHost, ipv4HostInfo);
+    assert.deepStrictEqual(parsedIPv4UDPFrame.frameNumber, 0);
+    assert.deepStrictEqual(parsedIPv4UDPFrame.data, packetData);
 
     // IPv6
-    assert.deepEqual(parsedIPv6UDPFrame.remoteHost, ipv6HostInfo);
-    assert.deepEqual(parsedIPv6UDPFrame.frameNumber, 4);
-    assert.deepEqual(parsedIPv6UDPFrame.data, packetData);
+    assert.deepStrictEqual(parsedIPv6UDPFrame.remoteHost, ipv6HostInfo);
+    assert.deepStrictEqual(parsedIPv6UDPFrame.frameNumber, 4);
+    assert.deepStrictEqual(parsedIPv6UDPFrame.data, packetData);
 
     // Hostname
-    assert.deepEqual(parsedHostnameUDPFrame.remoteHost, hostHostInfo);
-    assert.deepEqual(parsedHostnameUDPFrame.frameNumber, 0);
-    assert.deepEqual(parsedHostnameUDPFrame.data, packetData);
+    assert.deepStrictEqual(parsedHostnameUDPFrame.remoteHost, hostHostInfo);
+    assert.deepStrictEqual(parsedHostnameUDPFrame.frameNumber, 0);
+    assert.deepStrictEqual(parsedHostnameUDPFrame.data, packetData);
   });
 });
 
@@ -382,6 +382,112 @@ describe('Validating SocksProxyOptions', () => {
   });
 });
 
+describe('SocksClient', () => {
+  describe('createConnection', () => {
+    it('should call the callback with an error when options validation fails and callback is provided', () => {
+      SocksClient.createConnection(
+        {
+          destination: {
+            host: '1.2.3.4',
+            port: 1234,
+          },
+          proxy: {
+            host: '1.2.3.4',
+            port: 1080,
+            type: 4,
+          },
+          command: 'fake' as any,
+        },
+        (err: Error) => {
+          assert(err instanceof SocksClientError);
+        },
+      );
+    });
+
+    it('should reject promise when options validation fails and callback is not provided', async () => {
+      assert.rejects(
+        async () => {
+          await SocksClient.createConnection({
+            destination: {
+              host: '1.2.3.4',
+              port: 1234,
+            },
+            proxy: {
+              host: '1.2.3.4',
+              port: 1080,
+              type: 4,
+            },
+            command: 'fake' as any,
+          });
+        },
+        (err) => {
+          assert(err instanceof SocksClientError);
+          return true;
+        },
+      );
+    });
+  });
+
+  describe('createConnectionChain', () => {
+    it('should call the callback with an error when options validation fails and callback is provided', () => {
+      SocksClient.createConnectionChain(
+        {
+          destination: {
+            host: '1.2.3.4',
+            port: 1234,
+          },
+          proxies: [
+            {
+              host: '1.2.3.4',
+              port: 1080,
+              type: 4,
+            },
+            {
+              host: '2.3.4.5',
+              port: 1080,
+              type: 4,
+            },
+          ],
+          command: 'fake' as any,
+        },
+        (err: Error) => {
+          assert(err instanceof SocksClientError);
+        },
+      );
+    });
+
+    it('should reject promise when options validation fails and callback is not provided', async () => {
+      assert.rejects(
+        async () => {
+          await SocksClient.createConnectionChain({
+            destination: {
+              host: '1.2.3.4',
+              port: 1234,
+            },
+            proxies: [
+              {
+                host: '1.2.3.4',
+                port: 1080,
+                type: 4,
+              },
+              {
+                host: '2.3.4.5',
+                port: 1080,
+                type: 4,
+              },
+            ],
+            command: 'fake' as any,
+          });
+        },
+        (err) => {
+          assert(err instanceof SocksClientError);
+          return true;
+        },
+      );
+    });
+  });
+});
+
 describe('utils', () => {
   it('should shuffle an array', () => {
     const arr = [1, 2, 3, 4, 5, 6];
@@ -389,7 +495,7 @@ describe('utils', () => {
 
     shuffleArray(arrCopy);
 
-    assert.notDeepEqual(arr, arrCopy);
-    assert.deepEqual(arr, arrCopy.sort());
+    assert.notDeepStrictEqual(arr, arrCopy);
+    assert.deepStrictEqual(arr, arrCopy.sort());
   });
 });

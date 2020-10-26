@@ -1,4 +1,4 @@
-import {assert} from 'chai';
+import * as assert from 'assert';
 import 'mocha';
 import {ReceiveBuffer} from '../src/common/receivebuffer';
 
@@ -42,7 +42,7 @@ describe('Using ReceiveBuffers', () => {
     const data = Buffer.from('hello');
     buff.append(data);
 
-    assert.deepEqual(buff.buffer.slice(0, data.length), data);
+    assert.deepStrictEqual(buff.buffer.slice(0, data.length), data);
   });
 
   it('should peek internal buffer data and not remove it', () => {
@@ -50,8 +50,8 @@ describe('Using ReceiveBuffers', () => {
     const data = Buffer.from('hello');
     buff.append(data);
 
-    assert.deepEqual(buff.peek(data.length), data);
-    assert.deepEqual(buff.buffer.slice(0, data.length), data);
+    assert.deepStrictEqual(buff.peek(data.length), data);
+    assert.deepStrictEqual(buff.buffer.slice(0, data.length), data);
   });
 
   it('should get internal buffer data and remove it properly', () => {
@@ -61,7 +61,7 @@ describe('Using ReceiveBuffers', () => {
 
     assert.strictEqual(buff.length, data.length);
     const readData = buff.get(data.length);
-    assert.deepEqual(readData, data);
+    assert.deepStrictEqual(readData, data);
     assert.strictEqual(buff.length, 0);
   });
 
@@ -73,7 +73,7 @@ describe('Using ReceiveBuffers', () => {
     assert(buff.buffer.length >= longData.length);
 
     const readData = buff.get(longData.length);
-    assert.deepEqual(readData, longData);
+    assert.deepStrictEqual(readData, longData);
   });
 
   it('should throw an error if attemping to append something that is not a Buffer', () => {
