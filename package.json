@@ -4,7 +4,7 @@
   "version": "2.5.0",
   "description": "Fully featured SOCKS proxy client supporting SOCKSv4, SOCKSv4a, and SOCKSv5. Includes Bind and Associate functionality.",
   "main": "build/index.js",
-  "typings": "typings",
+  "typings": "typings/index.d.ts",
   "homepage": "https://github.com/JoshGlazebrook/socks/",
   "repository": {
     "type": "git",
