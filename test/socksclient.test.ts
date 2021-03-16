@@ -127,6 +127,30 @@ describe('Validating SocksProxyOptions', () => {
     type: 5,
   };
 
+  const socksProxyInvalidCustomAuthMethod: SocksProxy = {
+    host: 'openinternetproxyfree.com',
+    port: 1080,
+    type: 5,
+    custom_auth_method: 0x10,
+  };
+
+  const socksProxyCustomAuthMissingOptions: SocksProxy = {
+    host: 'openinternetproxyfree.com',
+    port: 1080,
+    type: 5,
+    custom_auth_method: 0x80,
+  };
+
+  const socksProxyCustomAuthValidOptions: SocksProxy = {
+    host: 'openinternetproxyfree.com',
+    port: 1080,
+    type: 5,
+    custom_auth_method: 0x80,
+    custom_auth_request_handler: async () => Buffer.from([1, 2, 3]),
+    custom_auth_response_size: 2,
+    custom_auth_response_handler: async (data) => data[1] === 0x01,
+  };
+
   const invalidProxyType: any = 9;
 
   const socksProxyInvalidPortBounds: SocksProxy = {
@@ -149,13 +173,9 @@ describe('Validating SocksProxyOptions', () => {
 
   const socketValid = new net.Socket();
   const socketInvalid: any = 'something that is not a socket';
-
   const socksProxiesValid: SocksProxy[] = [socksProxyValid, socksProxyValid];
-
   const socksProxiesInvalidLength: SocksProxy[] = [socksProxyValid];
-
   const socksProxiesInvalid: any = 'not an array of proxies';
-
   const socksProxiesInvalidMixed: SocksProxy[] = [
     socksProxyValid,
     socksProxyInvalidIPAddress,
@@ -304,6 +324,36 @@ describe('Validating SocksProxyOptions', () => {
         existing_socket: socketInvalid,
       });
     }, SocksClientError);
+  });
+
+  it('should throw an exception when given a custom_auth_method with an invalid value', () => {
+    assert.throws(() => {
+      validateSocksClientOptions({
+        proxy: socksProxyInvalidCustomAuthMethod,
+        command: socksCommandValid,
+        destination: socksRemoteHostValid,
+      });
+    });
+  });
+
+  it('should throw an exception when custom_auth_method is present but not all the custom auth options are set', () => {
+    assert.throws(() => {
+      validateSocksClientOptions({
+        proxy: socksProxyCustomAuthMissingOptions,
+        command: socksCommandValid,
+        destination: socksRemoteHostValid,
+      });
+    });
+  });
+
+  it('should not throw an exception when all custom auth methods are set', () => {
+    assert.doesNotThrow(() => {
+      validateSocksClientOptions({
+        proxy: socksProxyCustomAuthValidOptions,
+        command: socksCommandValid,
+        destination: socksRemoteHostValid,
+      });
+    });
   });
 
   it('should not throw an exception when given valid options (chaining)', () => {

@@ -16,6 +16,8 @@ const ERRORS = {
   InvalidSocksClientOptionsProxy: 'Invalid SOCKS proxy details were provided.',
   InvalidSocksClientOptionsTimeout: 'An invalid timeout value was provided. Please enter a value above 0 (in ms).',
   InvalidSocksClientOptionsProxiesLength: 'At least two socks proxies must be provided for chaining.',
+  InvalidSocksClientOptionsCustomAuthRange: 'Custom auth must be a value between 0x80 and 0xFE.',
+  InvalidSocksClientOptionsCustomAuthOptions: 'When a custom_auth_method is provided, custom_auth_request_handler, custom_auth_response_size, and custom_auth_response_handler must also be provided and valid.',
   NegotiationError: 'Negotiation error',
   SocketClosed: 'Socket closed',
   ProxyConnectionTimedOut: 'Proxy connection timed out',
@@ -67,6 +69,11 @@ enum Socks5Auth {
   GSSApi = 0x01,
   UserPass = 0x02,
 }
+
+const SOCKS5_CUSTOM_AUTH_START = 0x80;
+const SOCKS5_CUSTOM_AUTH_END = 0xfe;
+
+const SOCKS5_NO_ACCEPTABLE_AUTH = 0xff;
 
 enum Socks5Response {
   Granted = 0x00,
@@ -120,6 +127,14 @@ type SocksProxy = RequireOnlyOne<
     userId?: string;
     // For SOCKS v5, this password is used in username/password authentication.
     password?: string;
+    // If present, this auth method will be sent to the proxy server during the initial handshake.
+    custom_auth_method?: number;
+    // If present with custom_auth_method, the payload of the returned Buffer of the provided function is sent during the auth handshake.
+    custom_auth_request_handler?: () => Promise<Buffer>;
+    // If present with custom_auth_method, this is the expected total response size of the data returned from the server during custom auth handshake.
+    custom_auth_response_size?: number;
+    // If present with custom_auth_method, the response from the server is passed to this function. If true is returned from this function, socks client will continue the handshake process, if false it will disconnect.
+    custom_auth_response_handler?: (data: Buffer) => Promise<boolean>;
   },
   'host' | 'ipaddress'
 >;
@@ -209,4 +224,7 @@ export {
   SocksClientBoundEvent,
   SocksUDPFrameDetails,
   SOCKS_INCOMING_PACKET_SIZES,
+  SOCKS5_CUSTOM_AUTH_START,
+  SOCKS5_CUSTOM_AUTH_END,
+  SOCKS5_NO_ACCEPTABLE_AUTH,
 };
