@@ -19,6 +19,7 @@ import {
   SocksUDPFrameDetails,
   ERRORS,
   SOCKS_INCOMING_PACKET_SIZES,
+  SOCKS5_NO_ACCEPTABLE_AUTH,
 } from '../common/constants';
 import {
   validateSocksClientOptions,
@@ -59,6 +60,7 @@ class SocksClient extends EventEmitter implements SocksClient {
   private receiveBuffer: ReceiveBuffer;
   // This is the amount of data we need to receive before we can continue processing SOCKS handshake packets.
   private nextRequiredPacketBufferSize: number;
+  private socks5ChosenAuthType: number;
 
   // Internal Socket data handlers
   private onDataReceived: (data: Buffer) => void;
@@ -98,7 +100,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       } catch (err) {
         if (typeof callback === 'function') {
           callback(err);
-          return resolve(); // Resolves pending promise (prevents memory leaks).
+          return resolve(err as any); // Resolves pending promise (prevents memory leaks).
         } else {
           return reject(err);
         }
@@ -110,7 +112,7 @@ class SocksClient extends EventEmitter implements SocksClient {
         client.removeAllListeners();
         if (typeof callback === 'function') {
           callback(null, info);
-          resolve(); // Resolves pending promise (prevents memory leaks).
+          resolve(info); // Resolves pending promise (prevents memory leaks).
         } else {
           resolve(info);
         }
@@ -121,7 +123,7 @@ class SocksClient extends EventEmitter implements SocksClient {
         client.removeAllListeners();
         if (typeof callback === 'function') {
           callback(err);
-          resolve(); // Resolves pending promise (prevents memory leaks).
+          resolve(err as any); // Resolves pending promise (prevents memory leaks).
         } else {
           reject(err);
         }
@@ -149,7 +151,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       } catch (err) {
         if (typeof callback === 'function') {
           callback(err);
-          return resolve(); // Resolves pending promise (prevents memory leaks).
+          return resolve(err as any); // Resolves pending promise (prevents memory leaks).
         } else {
           return reject(err);
         }
@@ -192,14 +194,14 @@ class SocksClient extends EventEmitter implements SocksClient {
 
         if (typeof callback === 'function') {
           callback(null, {socket: sock});
-          resolve(); // Resolves pending promise (prevents memory leaks).
+          resolve({socket: sock}); // Resolves pending promise (prevents memory leaks).
         } else {
           resolve({socket: sock});
         }
       } catch (err) {
         if (typeof callback === 'function') {
           callback(err);
-          resolve(); // Resolves pending promise (prevents memory leaks).
+          resolve(err as any); // Resolves pending promise (prevents memory leaks).
         } else {
           reject(err);
         }
@@ -586,17 +588,26 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   private sendSocks5InitialHandshake() {
     const buff = new SmartBuffer();
-    buff.writeUInt8(0x05);
+
+    // By default we always support no auth.
+    const supportedAuthMethods = [Socks5Auth.NoAuth];
 
     // We should only tell the proxy we support user/pass auth if auth info is actually provided.
     // Note: As of Tor v0.3.5.7+, if user/pass auth is an option from the client, by default it will always take priority.
     if (this.options.proxy.userId || this.options.proxy.password) {
-      buff.writeUInt8(2);
-      buff.writeUInt8(Socks5Auth.NoAuth);
-      buff.writeUInt8(Socks5Auth.UserPass);
-    } else {
-      buff.writeUInt8(1);
-      buff.writeUInt8(Socks5Auth.NoAuth);
+      supportedAuthMethods.push(Socks5Auth.UserPass);
+    }
+
+    // Custom auth method?
+    if (this.options.proxy.custom_auth_method !== undefined) {
+      supportedAuthMethods.push(this.options.proxy.custom_auth_method);
+    }
+
+    // Build handshake packet
+    buff.writeUInt8(0x05);
+    buff.writeUInt8(supportedAuthMethods.length);
+    for (const authMethod of supportedAuthMethods) {
+      buff.writeUInt8(authMethod);
     }
 
     this.nextRequiredPacketBufferSize =
@@ -614,15 +625,21 @@ class SocksClient extends EventEmitter implements SocksClient {
 
     if (data[0] !== 0x05) {
       this.closeSocket(ERRORS.InvalidSocks5IntiailHandshakeSocksVersion);
-    } else if (data[1] === 0xff) {
+    } else if (data[1] === SOCKS5_NO_ACCEPTABLE_AUTH) {
       this.closeSocket(ERRORS.InvalidSocks5InitialHandshakeNoAcceptedAuthType);
     } else {
       // If selected Socks v5 auth method is no auth, send final handshake request.
       if (data[1] === Socks5Auth.NoAuth) {
+        this.socks5ChosenAuthType = Socks5Auth.NoAuth;
         this.sendSocks5CommandRequest();
         // If selected Socks v5 auth method is user/password, send auth handshake.
       } else if (data[1] === Socks5Auth.UserPass) {
+        this.socks5ChosenAuthType = Socks5Auth.UserPass;
         this.sendSocks5UserPassAuthentication();
+        // If selected Socks v5 auth method is the custom_auth_method, send custom handshake.
+      } else if (data[1] === this.options.proxy.custom_auth_method) {
+        this.socks5ChosenAuthType = this.options.proxy.custom_auth_method;
+        this.sendSocks5CustomAuthentication();
       } else {
         this.closeSocket(ERRORS.InvalidSocks5InitialHandshakeUnknownAuthType);
       }
@@ -651,16 +668,54 @@ class SocksClient extends EventEmitter implements SocksClient {
     this.setState(SocksClientState.SentAuthentication);
   }
 
+  private async sendSocks5CustomAuthentication() {
+    this.nextRequiredPacketBufferSize = this.options.proxy.custom_auth_response_size;
+    this.socket.write(await this.options.proxy.custom_auth_request_handler());
+    this.setState(SocksClientState.SentAuthentication);
+  }
+
+  private async handleSocks5CustomAuthHandshakeResponse(data: Buffer) {
+    return await this.options.proxy.custom_auth_response_handler(data);
+  }
+
+  private async handleSocks5AuthenticationNoAuthHandshakeResponse(
+    data: Buffer,
+  ): Promise<boolean> {
+    return data[1] === 0x00;
+  }
+
+  private async handleSocks5AuthenticationUserPassHandshakeResponse(
+    data: Buffer,
+  ): Promise<boolean> {
+    return data[1] === 0x00;
+  }
+
   /**
    * Handles Socks v5 auth handshake response.
    * @param data
    */
-  private handleInitialSocks5AuthenticationHandshakeResponse() {
+  private async handleInitialSocks5AuthenticationHandshakeResponse() {
     this.setState(SocksClientState.ReceivedAuthenticationResponse);
 
-    const data = this.receiveBuffer.get(2);
+    let authResult: boolean = false;
 
-    if (data[1] !== 0x00) {
+    if (this.socks5ChosenAuthType === Socks5Auth.NoAuth) {
+      authResult = await this.handleSocks5AuthenticationNoAuthHandshakeResponse(
+        this.receiveBuffer.get(2),
+      );
+    } else if (this.socks5ChosenAuthType === Socks5Auth.UserPass) {
+      authResult = await this.handleSocks5AuthenticationUserPassHandshakeResponse(
+        this.receiveBuffer.get(2),
+      );
+    } else if (
+      this.socks5ChosenAuthType === this.options.proxy.custom_auth_method
+    ) {
+      authResult = await this.handleSocks5CustomAuthHandshakeResponse(
+        this.receiveBuffer.get(this.options.proxy.custom_auth_response_size),
+      );
+    }
+
+    if (!authResult) {
       this.closeSocket(ERRORS.Socks5AuthenticationFailed);
     } else {
       this.sendSocks5CommandRequest();

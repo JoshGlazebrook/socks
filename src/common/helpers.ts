@@ -4,7 +4,13 @@ import {
   SocksRemoteHost,
 } from '../client/socksclient';
 import {SocksClientError} from './util';
-import {ERRORS, SocksCommand, SocksProxy} from './constants';
+import {
+  ERRORS,
+  SOCKS5_CUSTOM_AUTH_END,
+  SOCKS5_CUSTOM_AUTH_START,
+  SocksCommand,
+  SocksProxy,
+} from './constants';
 import * as stream from 'stream';
 
 /**
@@ -38,6 +44,9 @@ function validateSocksClientOptions(
   if (!isValidSocksProxy(options.proxy)) {
     throw new SocksClientError(ERRORS.InvalidSocksClientOptionsProxy, options);
   }
+
+  // Validate custom auth (if set)
+  validateCustomProxyAuth(options.proxy, options);
 
   // Check timeout
   if (options.timeout && !isValidTimeoutValue(options.timeout)) {
@@ -99,6 +108,9 @@ function validateSocksClientChainOptions(options: SocksClientChainOptions) {
         options,
       );
     }
+
+    // Validate custom auth (if set)
+    validateCustomProxyAuth(proxy, options);
   });
 
   // Check timeout
@@ -107,6 +119,54 @@ function validateSocksClientChainOptions(options: SocksClientChainOptions) {
       ERRORS.InvalidSocksClientOptionsTimeout,
       options,
     );
+  }
+}
+
+function validateCustomProxyAuth(
+  proxy: SocksProxy,
+  options: SocksClientOptions | SocksClientChainOptions,
+) {
+  if (proxy.custom_auth_method !== undefined) {
+    // Invalid auth method range
+    if (
+      proxy.custom_auth_method < SOCKS5_CUSTOM_AUTH_START ||
+      proxy.custom_auth_method > SOCKS5_CUSTOM_AUTH_END
+    ) {
+      throw new SocksClientError(
+        ERRORS.InvalidSocksClientOptionsCustomAuthRange,
+        options,
+      );
+    }
+
+    // Missing custom_auth_request_handler
+    if (
+      proxy.custom_auth_request_handler === undefined ||
+      typeof proxy.custom_auth_request_handler !== 'function'
+    ) {
+      throw new SocksClientError(
+        ERRORS.InvalidSocksClientOptionsCustomAuthOptions,
+        options,
+      );
+    }
+
+    // Missing custom_auth_response_size
+    if (proxy.custom_auth_response_size === undefined) {
+      throw new SocksClientError(
+        ERRORS.InvalidSocksClientOptionsCustomAuthOptions,
+        options,
+      );
+    }
+
+    // Missing/invalid custom_auth_response_handler
+    if (
+      proxy.custom_auth_response_handler === undefined ||
+      typeof proxy.custom_auth_response_handler !== 'function'
+    ) {
+      throw new SocksClientError(
+        ERRORS.InvalidSocksClientOptionsCustomAuthOptions,
+        options,
+      );
+    }
   }
 }
 
