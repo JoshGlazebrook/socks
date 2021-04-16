@@ -843,7 +843,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       if (SocksCommand[this.options.command] === SocksCommand.connect) {
         this.setState(SocksClientState.Established);
         this.removeInternalSocketHandlers();
-        this.emit('established', {socket: this.socket});
+        this.emit('established', {remoteHost, socket: this.socket});
       } else if (SocksCommand[this.options.command] === SocksCommand.bind) {
         /* If using BIND, the Socks client is now in BoundWaitingForConnection state.
            This means that the remote proxy server is waiting for a remote connection to the bound port. */
