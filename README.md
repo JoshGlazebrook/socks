@@ -422,7 +422,7 @@ Note: When using 4a please specify type: 4, and when using 5h please specify typ
   proxy: {
     host: '159.203.75.200', // ipv4, ipv6, or hostname
     port: 1080,
-    type: 5 // Proxy version (4 or 5). For v4a use 4, for v5h use 5.
+    type: 5, // Proxy version (4 or 5). For v4a use 4, for v5h use 5.
 
     // Optional fields
     userId: 'some username', // Used for SOCKS4 userId auth, and SOCKS5 user/pass auth in conjunction with password.
