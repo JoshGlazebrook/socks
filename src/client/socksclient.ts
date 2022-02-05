@@ -174,7 +174,9 @@ class SocksClient extends EventEmitter implements SocksClient {
             i === options.proxies.length - 1
               ? options.destination
               : {
-                  host: options.proxies[i + 1].ipaddress,
+                  host:
+                    options.proxies[i + 1].host ||
+                    options.proxies[i + 1].ipaddress,
                   port: options.proxies[i + 1].port,
                 };
 
