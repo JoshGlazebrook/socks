@@ -174,7 +174,9 @@ class SocksClient extends EventEmitter implements SocksClient {
             i === options.proxies.length - 1
               ? options.destination
               : {
-                  host: options.proxies[i + 1].ipaddress,
+                  host:
+                    options.proxies[i + 1].host ||
+                    options.proxies[i + 1].ipaddress,
                   port: options.proxies[i + 1].port,
                 };
 
@@ -669,7 +671,8 @@ class SocksClient extends EventEmitter implements SocksClient {
   }
 
   private async sendSocks5CustomAuthentication() {
-    this.nextRequiredPacketBufferSize = this.options.proxy.custom_auth_response_size;
+    this.nextRequiredPacketBufferSize =
+      this.options.proxy.custom_auth_response_size;
     this.socket.write(await this.options.proxy.custom_auth_request_handler());
     this.setState(SocksClientState.SentAuthentication);
   }
@@ -704,9 +707,10 @@ class SocksClient extends EventEmitter implements SocksClient {
         this.receiveBuffer.get(2),
       );
     } else if (this.socks5ChosenAuthType === Socks5Auth.UserPass) {
-      authResult = await this.handleSocks5AuthenticationUserPassHandshakeResponse(
-        this.receiveBuffer.get(2),
-      );
+      authResult =
+        await this.handleSocks5AuthenticationUserPassHandshakeResponse(
+          this.receiveBuffer.get(2),
+        );
     } else if (
       this.socks5ChosenAuthType === this.options.proxy.custom_auth_method
     ) {
@@ -799,9 +803,8 @@ class SocksClient extends EventEmitter implements SocksClient {
         // Hostname
       } else if (addressType === Socks5HostType.Hostname) {
         const hostLength = header[4];
-        const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHostname(
-          hostLength,
-        ); // header + host length + host + port
+        const dataNeeded =
+          SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHostname(hostLength); // header + host length + host + port
 
         // Check if data is available.
         if (this.receiveBuffer.length < dataNeeded) {
@@ -914,9 +917,8 @@ class SocksClient extends EventEmitter implements SocksClient {
         // Hostname
       } else if (addressType === Socks5HostType.Hostname) {
         const hostLength = header[4];
-        const dataNeeded = SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHostname(
-          hostLength,
-        ); // header + host length + port
+        const dataNeeded =
+          SOCKS_INCOMING_PACKET_SIZES.Socks5ResponseHostname(hostLength); // header + host length + port
 
         // Check if data is available.
         if (this.receiveBuffer.length < dataNeeded) {
