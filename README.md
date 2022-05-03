@@ -2,6 +2,8 @@
 
 Fully featured SOCKS proxy client supporting SOCKSv4, SOCKSv4a, and SOCKSv5. Includes Bind and Associate functionality.
 
+> Looking for Node.js agent? Check [node-socks-proxy-agent](https://github.com/TooTallNate/node-socks-proxy-agent).
+
 ### Features
 
 * Supports SOCKS v4, v4a, v5, and v5h protocols.
