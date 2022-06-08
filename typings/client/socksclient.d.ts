@@ -1,5 +1,9 @@
 /// <reference types="node" />
+/// <reference types="node" />
+/// <reference types="node" />
+/// <reference types="node" />
 import { EventEmitter } from 'events';
+import * as net from 'net';
 import { SocksClientOptions, SocksClientChainOptions, SocksRemoteHost, SocksProxy, SocksClientBoundEvent, SocksClientEstablishedEvent, SocksUDPFrameDetails } from '../common/constants';
 import { SocksClientError } from '../common/util';
 import { Duplex } from 'stream';
@@ -36,7 +40,7 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      * @param callback { Function } An optional callback function.
      * @returns { Promise }
      */
-    static createConnection(options: SocksClientOptions, callback?: Function): Promise<SocksClientEstablishedEvent>;
+    static createConnection(options: SocksClientOptions, callback?: (error: unknown | null, info?: SocksClientEstablishedEvent) => void): Promise<SocksClientEstablishedEvent>;
     /**
      * Creates a new SOCKS connection chain to a destination host through 2 or more SOCKS proxies.
      *
@@ -46,7 +50,9 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      * @param callback { Function } An optional callback function.
      * @returns { Promise }
      */
-    static createConnectionChain(options: SocksClientChainOptions, callback?: Function): Promise<SocksClientEstablishedEvent>;
+    static createConnectionChain(options: SocksClientChainOptions, callback?: (error: any, socket?: {
+        socket: net.Socket;
+    }) => void): Promise<SocksClientEstablishedEvent>;
     /**
      * Creates a SOCKS UDP Frame.
      * @param options

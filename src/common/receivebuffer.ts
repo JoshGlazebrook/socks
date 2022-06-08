@@ -3,7 +3,7 @@ class ReceiveBuffer {
   private offset: number;
   private originalSize: number;
 
-  constructor(size: number = 4096) {
+  constructor(size = 4096) {
     this.buffer = Buffer.allocUnsafe(size);
     this.offset = 0;
     this.originalSize = size;
