@@ -91,7 +91,10 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   static createConnection(
     options: SocksClientOptions,
-    callback?: Function,
+    callback?: (
+      error: unknown | null,
+      info?: SocksClientEstablishedEvent,
+    ) => void,
   ): Promise<SocksClientEstablishedEvent> {
     return new Promise<SocksClientEstablishedEvent>((resolve, reject) => {
       // Validate SocksClientOptions
@@ -142,8 +145,9 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   static createConnectionChain(
     options: SocksClientChainOptions,
-    callback?: Function,
+    callback?: (error: any, socket?: {socket: net.Socket}) => void,
   ): Promise<SocksClientEstablishedEvent> {
+    // eslint-disable-next-line no-async-promise-executor
     return new Promise<SocksClientEstablishedEvent>(async (resolve, reject) => {
       // Validate SocksClientChainOptions
       try {
@@ -165,7 +169,6 @@ class SocksClient extends EventEmitter implements SocksClient {
       }
 
       try {
-        // tslint:disable-next-line:no-increment-decrement
         for (let i = 0; i < options.proxies.length; i++) {
           const nextProxy = options.proxies[i];
 
