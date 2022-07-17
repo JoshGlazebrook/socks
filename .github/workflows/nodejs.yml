@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [10.x, 12.x, 14.x, 16.x, 18.x]
+        node-version: [14.x, 16.x, 18.x, 20.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
     steps:
     - uses: actions/checkout@v3
@@ -20,4 +20,4 @@ jobs:
         cache: 'npm'
     - run: npm ci
     - run: npm run build
-    - run: npm run coveralls
+    - run: npm run test

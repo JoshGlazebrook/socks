@@ -38,12 +38,9 @@
     "@types/node": "^18.0.6",
     "@typescript-eslint/eslint-plugin": "^5.30.6",
     "@typescript-eslint/parser": "^5.30.6",
-    "coveralls": "^3.1.1",
     "eslint": "^8.20.0",
     "mocha": "^10.0.0",
-    "nyc": "15.1.0",
     "prettier": "^2.7.1",
-    "socks5-server": "^0.1.1",
     "ts-node": "^10.9.1",
     "typescript": "^4.7.4"
   },
@@ -55,32 +52,7 @@
     "prepublish": "npm install -g typescript && npm run build",
     "test": "NODE_ENV=test mocha --recursive --require ts-node/register test/**/*.ts",
     "prettier": "prettier --write ./src/**/*.ts --config .prettierrc.yaml",
-    "coverage": "NODE_ENV=test nyc npm test",
-    "coveralls": "NODE_ENV=test nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "lint": "eslint 'src/**/*.ts'",
     "build": "rm -rf build typings && prettier --write ./src/**/*.ts --config .prettierrc.yaml && tsc -p ."
-  },
-  "nyc": {
-    "extension": [
-      ".ts",
-      ".tsx"
-    ],
-    "include": [
-      "src/*.ts",
-      "src/**/*.ts"
-    ],
-    "exclude": [
-      "**.*.d.ts",
-      "node_modules",
-      "typings"
-    ],
-    "require": [
-      "ts-node/register"
-    ],
-    "reporter": [
-      "json",
-      "html"
-    ],
-    "all": true
   }
 }
