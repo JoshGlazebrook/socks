@@ -38,7 +38,7 @@ declare interface SocksClient {
     listener: (info: SocksClientEstablishedEvent) => void,
   ): this;
 
-  once(event: string, listener: (...args: any[]) => void): this;
+  once(event: string, listener: (...args: unknown[]) => void): this;
   once(event: 'error', listener: (err: SocksClientError) => void): this;
   once(event: 'bound', listener: (info: SocksClientBoundEvent) => void): this;
   once(
@@ -46,7 +46,7 @@ declare interface SocksClient {
     listener: (info: SocksClientEstablishedEvent) => void,
   ): this;
 
-  emit(event: string | symbol, ...args: any[]): boolean;
+  emit(event: string | symbol, ...args: unknown[]): boolean;
   emit(event: 'error', err: SocksClientError): boolean;
   emit(event: 'bound', info: SocksClientBoundEvent): boolean;
   emit(event: 'established', info: SocksClientEstablishedEvent): boolean;
@@ -92,7 +92,7 @@ class SocksClient extends EventEmitter implements SocksClient {
   static createConnection(
     options: SocksClientOptions,
     callback?: (
-      error: unknown | null,
+      error: Error | null,
       info?: SocksClientEstablishedEvent,
     ) => void,
   ): Promise<SocksClientEstablishedEvent> {
@@ -103,6 +103,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       } catch (err) {
         if (typeof callback === 'function') {
           callback(err);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           return resolve(err as any); // Resolves pending promise (prevents memory leaks).
         } else {
           return reject(err);
@@ -126,6 +127,7 @@ class SocksClient extends EventEmitter implements SocksClient {
         client.removeAllListeners();
         if (typeof callback === 'function') {
           callback(err);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           resolve(err as any); // Resolves pending promise (prevents memory leaks).
         } else {
           reject(err);
@@ -145,7 +147,10 @@ class SocksClient extends EventEmitter implements SocksClient {
    */
   static createConnectionChain(
     options: SocksClientChainOptions,
-    callback?: (error: any, socket?: {socket: net.Socket}) => void,
+    callback?: (
+      error: Error | null,
+      socket?: SocksClientEstablishedEvent,
+    ) => void,
   ): Promise<SocksClientEstablishedEvent> {
     // eslint-disable-next-line no-async-promise-executor
     return new Promise<SocksClientEstablishedEvent>(async (resolve, reject) => {
@@ -155,6 +160,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       } catch (err) {
         if (typeof callback === 'function') {
           callback(err);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           return resolve(err as any); // Resolves pending promise (prevents memory leaks).
         } else {
           return reject(err);
@@ -206,6 +212,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       } catch (err) {
         if (typeof callback === 'function') {
           callback(err);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           resolve(err as any); // Resolves pending promise (prevents memory leaks).
         } else {
           reject(err);
@@ -703,7 +710,7 @@ class SocksClient extends EventEmitter implements SocksClient {
   private async handleInitialSocks5AuthenticationHandshakeResponse() {
     this.setState(SocksClientState.ReceivedAuthenticationResponse);
 
-    let authResult: boolean = false;
+    let authResult = false;
 
     if (this.socks5ChosenAuthType === Socks5Auth.NoAuth) {
       authResult = await this.handleSocks5AuthenticationNoAuthHandshakeResponse(
