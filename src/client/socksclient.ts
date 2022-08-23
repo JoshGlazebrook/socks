@@ -167,14 +167,14 @@ class SocksClient extends EventEmitter implements SocksClient {
         }
       }
 
-      let sock: net.Socket;
-
       // Shuffle proxies
       if (options.randomizeChain) {
         shuffleArray(options.proxies);
       }
 
       try {
+        let result: SocksClientEstablishedEvent;
+        
         for (let i = 0; i < options.proxies.length; i++) {
           const nextProxy = options.proxies[i];
 
@@ -190,24 +190,18 @@ class SocksClient extends EventEmitter implements SocksClient {
                 };
 
           // Creates the next connection in the chain.
-          const result = await SocksClient.createConnection({
+          result = await SocksClient.createConnection({
             command: 'connect',
             proxy: nextProxy,
             destination: nextDestination,
-            // Initial connection ignores this as sock is undefined. Subsequent connections re-use the first proxy socket to form a chain.
           });
-
-          // If sock is undefined, assign it here.
-          if (!sock) {
-            sock = result.socket;
-          }
         }
 
         if (typeof callback === 'function') {
-          callback(null, {socket: sock});
-          resolve({socket: sock}); // Resolves pending promise (prevents memory leaks).
+          callback(null, {socket: result.socket});
+          resolve({socket: result.socket}); // Resolves pending promise (prevents memory leaks).
         } else {
-          resolve({socket: sock});
+          resolve({socket: result.socket});
         }
       } catch (err) {
         if (typeof callback === 'function') {
