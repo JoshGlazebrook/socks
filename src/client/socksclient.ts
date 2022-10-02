@@ -167,14 +167,14 @@ class SocksClient extends EventEmitter implements SocksClient {
         }
       }
 
-      let sock: net.Socket;
-
       // Shuffle proxies
       if (options.randomizeChain) {
         shuffleArray(options.proxies);
       }
 
       try {
+        let sock: net.Socket;
+
         for (let i = 0; i < options.proxies.length; i++) {
           const nextProxy = options.proxies[i];
 
@@ -194,13 +194,11 @@ class SocksClient extends EventEmitter implements SocksClient {
             command: 'connect',
             proxy: nextProxy,
             destination: nextDestination,
-            // Initial connection ignores this as sock is undefined. Subsequent connections re-use the first proxy socket to form a chain.
+            existing_socket: sock,
           });
 
           // If sock is undefined, assign it here.
-          if (!sock) {
-            sock = result.socket;
-          }
+          sock = sock || result.socket;
         }
 
         if (typeof callback === 'function') {
