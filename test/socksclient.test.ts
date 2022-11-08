@@ -435,7 +435,7 @@ describe('Validating SocksProxyOptions', () => {
 describe('SocksClient', () => {
   describe('createConnection', () => {
     it('should call the callback with an error when options validation fails and callback is provided', () => {
-      SocksClient.createConnection(
+      const returnValue = SocksClient.createConnection(
         {
           destination: {
             host: '1.2.3.4',
@@ -452,6 +452,7 @@ describe('SocksClient', () => {
           assert(err instanceof SocksClientError);
         },
       );
+      assert(returnValue === undefined);
     });
 
     it('should reject promise when options validation fails and callback is not provided', async () => {
@@ -480,7 +481,7 @@ describe('SocksClient', () => {
 
   describe('createConnectionChain', () => {
     it('should call the callback with an error when options validation fails and callback is provided', () => {
-      SocksClient.createConnectionChain(
+      const returnValue = SocksClient.createConnectionChain(
         {
           destination: {
             host: '1.2.3.4',
@@ -504,6 +505,7 @@ describe('SocksClient', () => {
           assert(err instanceof SocksClientError);
         },
       );
+      assert(returnValue === undefined);
     });
 
     it('should reject promise when options validation fails and callback is not provided', async () => {

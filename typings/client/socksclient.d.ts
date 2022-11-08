@@ -18,6 +18,7 @@ declare interface SocksClient {
     emit(event: 'bound', info: SocksClientBoundEvent): boolean;
     emit(event: 'established', info: SocksClientEstablishedEvent): boolean;
 }
+export declare type EstablishCallback = (error: Error | null, info?: SocksClientEstablishedEvent) => void;
 declare class SocksClient extends EventEmitter implements SocksClient {
     private options;
     private socket;
@@ -38,7 +39,8 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      * @param callback { Function } An optional callback function.
      * @returns { Promise }
      */
-    static createConnection(options: SocksClientOptions, callback?: (error: Error | null, info?: SocksClientEstablishedEvent) => void): Promise<SocksClientEstablishedEvent>;
+    static createConnection(options: SocksClientOptions, callback: EstablishCallback): void;
+    static createConnection(options: SocksClientOptions): Promise<SocksClientEstablishedEvent>;
     /**
      * Creates a new SOCKS connection chain to a destination host through 2 or more SOCKS proxies.
      *
@@ -48,7 +50,8 @@ declare class SocksClient extends EventEmitter implements SocksClient {
      * @param callback { Function } An optional callback function.
      * @returns { Promise }
      */
-    static createConnectionChain(options: SocksClientChainOptions, callback?: (error: Error | null, socket?: SocksClientEstablishedEvent) => void): Promise<SocksClientEstablishedEvent>;
+    static createConnectionChain(options: SocksClientChainOptions, callback: EstablishCallback): void;
+    static createConnectionChain(options: SocksClientChainOptions): Promise<SocksClientEstablishedEvent>;
     /**
      * Creates a SOCKS UDP Frame.
      * @param options
