@@ -52,6 +52,21 @@ declare interface SocksClient {
   emit(event: 'established', info: SocksClientEstablishedEvent): boolean;
 }
 
+export type EstablishCallback = (error: Error | null, info?: SocksClientEstablishedEvent) => void;
+
+function callbackOrPromise(
+    maybeCallback : EstablishCallback | undefined,
+    fn: (callback: EstablishCallback) => unknown
+) {
+  if (maybeCallback) {
+    fn(maybeCallback);
+    return undefined;
+  }
+  return new Promise<SocksClientEstablishedEvent>((resolve, reject) => {
+    fn((error, info) => error ? reject(error) : resolve(info));
+  })
+}
+
 class SocksClient extends EventEmitter implements SocksClient {
   private options: SocksClientOptions;
   private socket: Duplex;
@@ -89,49 +104,29 @@ class SocksClient extends EventEmitter implements SocksClient {
    * @param callback { Function } An optional callback function.
    * @returns { Promise }
    */
-  static createConnection(
-    options: SocksClientOptions,
-    callback?: (
-      error: Error | null,
-      info?: SocksClientEstablishedEvent,
-    ) => void,
-  ): Promise<SocksClientEstablishedEvent> {
-    return new Promise<SocksClientEstablishedEvent>((resolve, reject) => {
+  static createConnection(options: SocksClientOptions, callback: EstablishCallback): void;
+  static createConnection(options: SocksClientOptions): Promise<SocksClientEstablishedEvent>;
+
+  static createConnection(options: SocksClientOptions, rawCb?: EstablishCallback) {
+    return callbackOrPromise(rawCb, callback => {
       // Validate SocksClientOptions
       try {
         validateSocksClientOptions(options, ['connect']);
       } catch (err) {
-        if (typeof callback === 'function') {
-          callback(err);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return resolve(err as any); // Resolves pending promise (prevents memory leaks).
-        } else {
-          return reject(err);
-        }
+        return callback(err);
       }
 
       const client = new SocksClient(options);
       client.connect(options.existing_socket);
       client.once('established', (info: SocksClientEstablishedEvent) => {
         client.removeAllListeners();
-        if (typeof callback === 'function') {
-          callback(null, info);
-          resolve(info); // Resolves pending promise (prevents memory leaks).
-        } else {
-          resolve(info);
-        }
+        callback(null, info);
       });
 
       // Error occurred, failed to establish connection.
       client.once('error', (err: Error) => {
         client.removeAllListeners();
-        if (typeof callback === 'function') {
-          callback(err);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          resolve(err as any); // Resolves pending promise (prevents memory leaks).
-        } else {
-          reject(err);
-        }
+        callback(err);
       });
     });
   }
@@ -145,26 +140,16 @@ class SocksClient extends EventEmitter implements SocksClient {
    * @param callback { Function } An optional callback function.
    * @returns { Promise }
    */
-  static createConnectionChain(
-    options: SocksClientChainOptions,
-    callback?: (
-      error: Error | null,
-      socket?: SocksClientEstablishedEvent,
-    ) => void,
-  ): Promise<SocksClientEstablishedEvent> {
-    // eslint-disable-next-line no-async-promise-executor
-    return new Promise<SocksClientEstablishedEvent>(async (resolve, reject) => {
+  static createConnectionChain(options: SocksClientChainOptions, callback: EstablishCallback): void;
+  static createConnectionChain(options: SocksClientChainOptions): Promise<SocksClientEstablishedEvent>;
+
+  static createConnectionChain(options: SocksClientChainOptions, rawCb?: EstablishCallback) {
+    return callbackOrPromise(rawCb, async callback => {
       // Validate SocksClientChainOptions
       try {
         validateSocksClientChainOptions(options);
       } catch (err) {
-        if (typeof callback === 'function') {
-          callback(err);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return resolve(err as any); // Resolves pending promise (prevents memory leaks).
-        } else {
-          return reject(err);
-        }
+        return callback(err);
       }
 
       // Shuffle proxies
@@ -201,20 +186,9 @@ class SocksClient extends EventEmitter implements SocksClient {
           sock = sock || result.socket;
         }
 
-        if (typeof callback === 'function') {
-          callback(null, {socket: sock});
-          resolve({socket: sock}); // Resolves pending promise (prevents memory leaks).
-        } else {
-          resolve({socket: sock});
-        }
+        callback(null, {socket: sock});
       } catch (err) {
-        if (typeof callback === 'function') {
-          callback(err);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          resolve(err as any); // Resolves pending promise (prevents memory leaks).
-        } else {
-          reject(err);
-        }
+        callback(err);
       }
     });
   }
