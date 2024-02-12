@@ -1,6 +1,5 @@
 import {Duplex} from 'stream';
 import {Socket, SocketConnectOpts} from 'net';
-import {RequireOnlyOne} from './util';
 
 const DEFAULT_TIMEOUT = 30000;
 
@@ -112,32 +111,29 @@ enum SocksClientState {
 /**
  * Represents a SocksProxy
  */
-type SocksProxy = RequireOnlyOne<
-  {
-    // The ip address (or hostname) of the proxy. (this is equivalent to the host option)
-    ipaddress?: string;
-    // The ip address (or hostname) of the proxy. (this is equivalent to the ipaddress option)
-    host?: string;
-    // Numeric port number of the proxy.
-    port: number;
-    // 4 or 5 (4 is also used for 4a).
-    type: SocksProxyType;
-    /* For SOCKS v4, the userId can be used for authentication.
+interface SocksProxy {
+  // The ip address (or hostname) of the proxy. (this is equivalent to the host option)
+  ipaddress?: string;
+  // The ip address (or hostname) of the proxy. (this is equivalent to the ipaddress option)
+  host?: string;
+  // Numeric port number of the proxy.
+  port: number;
+  // 4 or 5 (4 is also used for 4a).
+  type: SocksProxyType;
+  /* For SOCKS v4, the userId can be used for authentication.
      For SOCKS v5, userId is used as the username for username/password authentication. */
-    userId?: string;
-    // For SOCKS v5, this password is used in username/password authentication.
-    password?: string;
-    // If present, this auth method will be sent to the proxy server during the initial handshake.
-    custom_auth_method?: number;
-    // If present with custom_auth_method, the payload of the returned Buffer of the provided function is sent during the auth handshake.
-    custom_auth_request_handler?: () => Promise<Buffer>;
-    // If present with custom_auth_method, this is the expected total response size of the data returned from the server during custom auth handshake.
-    custom_auth_response_size?: number;
-    // If present with custom_auth_method, the response from the server is passed to this function. If true is returned from this function, socks client will continue the handshake process, if false it will disconnect.
-    custom_auth_response_handler?: (data: Buffer) => Promise<boolean>;
-  },
-  'host' | 'ipaddress'
->;
+  userId?: string;
+  // For SOCKS v5, this password is used in username/password authentication.
+  password?: string;
+  // If present, this auth method will be sent to the proxy server during the initial handshake.
+  custom_auth_method?: number;
+  // If present with custom_auth_method, the payload of the returned Buffer of the provided function is sent during the auth handshake.
+  custom_auth_request_handler?: () => Promise<Buffer>;
+  // If present with custom_auth_method, this is the expected total response size of the data returned from the server during custom auth handshake.
+  custom_auth_response_size?: number;
+  // If present with custom_auth_method, the response from the server is passed to this function. If true is returned from this function, socks client will continue the handshake process, if false it will disconnect.
+  custom_auth_response_handler?: (data: Buffer) => Promise<boolean>;
+}
 
 /**
  * Represents a remote host

@@ -1,6 +1,5 @@
 import {EventEmitter} from 'events';
 import * as net from 'net';
-import * as ip from 'ip';
 import {SmartBuffer} from 'smart-buffer';
 import {
   DEFAULT_TIMEOUT,
@@ -24,10 +23,14 @@ import {
 import {
   validateSocksClientOptions,
   validateSocksClientChainOptions,
+  ipv4ToInt32,
+  ipToBuffer,
+  int32ToIpv4,
 } from '../common/helpers';
 import {ReceiveBuffer} from '../common/receivebuffer';
 import {SocksClientError, shuffleArray} from '../common/util';
 import {Duplex} from 'stream';
+import {Address6} from 'ip-address';
 
 // Exposes SocksClient event types
 declare interface SocksClient {
@@ -231,10 +234,10 @@ class SocksClient extends EventEmitter implements SocksClient {
     // IPv4/IPv6/Hostname
     if (net.isIPv4(options.remoteHost.host)) {
       buff.writeUInt8(Socks5HostType.IPv4);
-      buff.writeUInt32BE(ip.toLong(options.remoteHost.host));
+      buff.writeUInt32BE(ipv4ToInt32(options.remoteHost.host));
     } else if (net.isIPv6(options.remoteHost.host)) {
       buff.writeUInt8(Socks5HostType.IPv6);
-      buff.writeBuffer(ip.toBuffer(options.remoteHost.host));
+      buff.writeBuffer(ipToBuffer(options.remoteHost.host));
     } else {
       buff.writeUInt8(Socks5HostType.Hostname);
       buff.writeUInt8(Buffer.byteLength(options.remoteHost.host));
@@ -263,9 +266,11 @@ class SocksClient extends EventEmitter implements SocksClient {
     let remoteHost;
 
     if (hostType === Socks5HostType.IPv4) {
-      remoteHost = ip.fromLong(buff.readUInt32BE());
+      remoteHost = int32ToIpv4(buff.readUInt32BE());
     } else if (hostType === Socks5HostType.IPv6) {
-      remoteHost = ip.toString(buff.readBuffer(16));
+      remoteHost = Address6.fromByteArray(
+        Array.from(buff.readBuffer(16)),
+      ).canonicalForm();
     } else {
       remoteHost = buff.readString(buff.readUInt8());
     }
@@ -508,7 +513,7 @@ class SocksClient extends EventEmitter implements SocksClient {
 
     // Socks 4 (IPv4)
     if (net.isIPv4(this.options.destination.host)) {
-      buff.writeBuffer(ip.toBuffer(this.options.destination.host));
+      buff.writeBuffer(ipToBuffer(this.options.destination.host));
       buff.writeStringNT(userId);
       // Socks 4a (hostname)
     } else {
@@ -546,7 +551,7 @@ class SocksClient extends EventEmitter implements SocksClient {
 
         const remoteHost: SocksRemoteHost = {
           port: buff.readUInt16BE(),
-          host: ip.fromLong(buff.readUInt32BE()),
+          host: int32ToIpv4(buff.readUInt32BE()),
         };
 
         // If host is 0.0.0.0, set to proxy host.
@@ -584,7 +589,7 @@ class SocksClient extends EventEmitter implements SocksClient {
 
       const remoteHost: SocksRemoteHost = {
         port: buff.readUInt16BE(),
-        host: ip.fromLong(buff.readUInt32BE()),
+        host: int32ToIpv4(buff.readUInt32BE()),
       };
 
       this.setState(SocksClientState.Established);
@@ -747,10 +752,10 @@ class SocksClient extends EventEmitter implements SocksClient {
     // ipv4, ipv6, domain?
     if (net.isIPv4(this.options.destination.host)) {
       buff.writeUInt8(Socks5HostType.IPv4);
-      buff.writeBuffer(ip.toBuffer(this.options.destination.host));
+      buff.writeBuffer(ipToBuffer(this.options.destination.host));
     } else if (net.isIPv6(this.options.destination.host)) {
       buff.writeUInt8(Socks5HostType.IPv6);
-      buff.writeBuffer(ip.toBuffer(this.options.destination.host));
+      buff.writeBuffer(ipToBuffer(this.options.destination.host));
     } else {
       buff.writeUInt8(Socks5HostType.Hostname);
       buff.writeUInt8(this.options.destination.host.length);
@@ -799,7 +804,7 @@ class SocksClient extends EventEmitter implements SocksClient {
         );
 
         remoteHost = {
-          host: ip.fromLong(buff.readUInt32BE()),
+          host: int32ToIpv4(buff.readUInt32BE()),
           port: buff.readUInt16BE(),
         };
 
@@ -842,7 +847,9 @@ class SocksClient extends EventEmitter implements SocksClient {
         );
 
         remoteHost = {
-          host: ip.toString(buff.readBuffer(16)),
+          host: Address6.fromByteArray(
+            Array.from(buff.readBuffer(16)),
+          ).canonicalForm(),
           port: buff.readUInt16BE(),
         };
       }
@@ -913,7 +920,7 @@ class SocksClient extends EventEmitter implements SocksClient {
         );
 
         remoteHost = {
-          host: ip.fromLong(buff.readUInt32BE()),
+          host: int32ToIpv4(buff.readUInt32BE()),
           port: buff.readUInt16BE(),
         };
 
@@ -956,7 +963,9 @@ class SocksClient extends EventEmitter implements SocksClient {
         );
 
         remoteHost = {
-          host: ip.toString(buff.readBuffer(16)),
+          host: Address6.fromByteArray(
+            Array.from(buff.readBuffer(16)),
+          ).canonicalForm(),
           port: buff.readUInt16BE(),
         };
       }

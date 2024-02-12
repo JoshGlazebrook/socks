@@ -6,7 +6,7 @@
     "sourceMap": true,
     "moduleResolution": "node",
     "outDir": "build",
-    "watch": false,
+    "skipLibCheck": true,
     "declaration": true,
     "declarationDir": "typings",
     "removeComments": false,
