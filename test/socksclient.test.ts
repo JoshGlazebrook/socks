@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {SocksClient} from '../src/client/socksclient';
 import * as assert from 'assert';
 import 'mocha';
@@ -6,8 +7,12 @@ import {SocksClientError, shuffleArray} from '../src/common/util';
 import {
   validateSocksClientOptions,
   validateSocksClientChainOptions,
+  ipv4ToInt32,
+  int32ToIpv4,
+  ipToBuffer,
 } from '../src/common/helpers';
 import * as net from 'net';
+import { Address4, Address6 } from 'ip-address';
 
 describe('Creating and parsing Socks UDP frames', () => {
   const packetData = Buffer.from([10, 12, 14, 16, 18, 20]);
@@ -26,7 +31,7 @@ describe('Creating and parsing Socks UDP frames', () => {
   };
 
   const ipv6HostInfo = {
-    host: '2001:db8:85a3:1234:8a2e:370:7334:1840',
+    host: '2001:0db8:85a3:1234:8a2e:0370:7334:1840',
     port: 80,
   };
 
@@ -86,12 +91,12 @@ describe('Validating SocksProxyOptions', () => {
   const socksRemoteHostInvalidHost: SocksRemoteHost = {
     host: undefined,
     port: 1080,
-  };
+  } as any;
 
   const socksremoteHostInvalidPort: SocksRemoteHost = {
     host: '1.2.3.4',
     port: undefined,
-  };
+  } as any;
 
   const socksCommandValid = 'connect';
   const socksCommandInvalid: any = 'other';
@@ -163,7 +168,7 @@ describe('Validating SocksProxyOptions', () => {
     ipaddress: '1.2.3.4',
     port: undefined,
     type: 4,
-  };
+  } as any;
 
   const socksProxyInvalidType: SocksProxy = {
     ipaddress: '1.2.3.4',
@@ -448,7 +453,7 @@ describe('SocksClient', () => {
           },
           command: 'fake' as any,
         },
-        (err: Error) => {
+        (err: Error | null) => {
           assert(err instanceof SocksClientError);
         },
       );
@@ -500,7 +505,7 @@ describe('SocksClient', () => {
           ],
           command: 'fake' as any,
         },
-        (err: Error) => {
+        (err: Error | null) => {
           assert(err instanceof SocksClientError);
         },
       );
@@ -541,11 +546,29 @@ describe('SocksClient', () => {
 describe('utils', () => {
   it('should shuffle an array', () => {
     const arr = [1, 2, 3, 4, 5, 6];
-    let arrCopy = [...arr];
+    const arrCopy = [...arr];
 
     shuffleArray(arrCopy);
 
     assert.notDeepStrictEqual(arr, arrCopy);
     assert.deepStrictEqual(arr, arrCopy.sort());
+  });
+
+  it("should convert between int32 and ipv4 string", () => {
+    const ipAddr = "1.2.3.4";
+    const ipLong = ipv4ToInt32(ipAddr);
+    assert.equal(int32ToIpv4(ipLong), ipAddr);
+  });
+
+  it('converts a valid IPv4 address to a Buffer correctly', () => {
+    const ip = '192.168.1.1';
+    const expectedBuffer = Buffer.from(new Address4(ip).toArray());
+    assert.deepEqual(expectedBuffer, ipToBuffer(ip));
+  });
+
+  it('converts a valid IPv6 address to a Buffer correctly', () => {
+    const ip = '2001:0db8:85a3:0000:0000:8a2e:0370:7334';
+    const expectedBuffer = Buffer.from(new Address6(ip).toByteArray());
+    assert.deepEqual(expectedBuffer, ipToBuffer(ip));
   });
 });

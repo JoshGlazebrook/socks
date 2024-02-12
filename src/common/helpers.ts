@@ -12,6 +12,8 @@ import {
   SocksProxy,
 } from './constants';
 import * as stream from 'stream';
+import {Address4, Address6} from 'ip-address';
+import * as net from 'net';
 
 /**
  * Validates the provided SocksClientOptions
@@ -208,3 +210,34 @@ function isValidTimeoutValue(value: number) {
 }
 
 export {validateSocksClientOptions, validateSocksClientChainOptions};
+
+export function ipv4ToInt32(ip: string): number {
+  const address = new Address4(ip);
+  // Convert the IPv4 address parts to an integer
+  return address.toArray().reduce((acc, part) => (acc << 8) + part, 0);
+}
+
+export function int32ToIpv4(int32: number): string {
+  // Extract each byte (octet) from the 32-bit integer
+  const octet1 = (int32 >>> 24) & 0xff;
+  const octet2 = (int32 >>> 16) & 0xff;
+  const octet3 = (int32 >>> 8) & 0xff;
+  const octet4 = int32 & 0xff;
+
+  // Combine the octets into a string in IPv4 format
+  return [octet1, octet2, octet3, octet4].join('.');
+}
+
+export function ipToBuffer(ip: string): Buffer {
+  if (net.isIPv4(ip)) {
+    // Handle IPv4 addresses
+    const address = new Address4(ip);
+    return Buffer.from(address.toArray());
+  } else if (net.isIPv6(ip)) {
+    // Handle IPv6 addresses
+    const address = new Address6(ip);
+    return Buffer.from(address.toByteArray());
+  } else {
+    throw new Error('Invalid IP address format');
+  }
+}
