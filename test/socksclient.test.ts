@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {SocksClient} from '../src/client/socksclient';
 import * as assert from 'assert';
 import 'mocha';
@@ -90,12 +91,12 @@ describe('Validating SocksProxyOptions', () => {
   const socksRemoteHostInvalidHost: SocksRemoteHost = {
     host: undefined,
     port: 1080,
-  };
+  } as any;
 
   const socksremoteHostInvalidPort: SocksRemoteHost = {
     host: '1.2.3.4',
     port: undefined,
-  };
+  } as any;
 
   const socksCommandValid = 'connect';
   const socksCommandInvalid: any = 'other';
@@ -167,7 +168,7 @@ describe('Validating SocksProxyOptions', () => {
     ipaddress: '1.2.3.4',
     port: undefined,
     type: 4,
-  };
+  } as any;
 
   const socksProxyInvalidType: SocksProxy = {
     ipaddress: '1.2.3.4',
@@ -452,7 +453,7 @@ describe('SocksClient', () => {
           },
           command: 'fake' as any,
         },
-        (err: Error) => {
+        (err: Error | null) => {
           assert(err instanceof SocksClientError);
         },
       );
@@ -504,7 +505,7 @@ describe('SocksClient', () => {
           ],
           command: 'fake' as any,
         },
-        (err: Error) => {
+        (err: Error | null) => {
           assert(err instanceof SocksClientError);
         },
       );
