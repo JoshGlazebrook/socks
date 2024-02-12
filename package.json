@@ -23,7 +23,7 @@
     "socks5"
   ],
   "engines": {
-    "node": ">= 16.0.0",
+    "node": ">= 14.0.0",
     "npm": ">= 3.0.0"
   },
   "author": "Josh Glazebrook",
@@ -52,6 +52,7 @@
     "test": "NODE_ENV=test mocha --recursive --require ts-node/register test/**/*.ts",
     "prettier": "prettier --write ./src/**/*.ts --config .prettierrc.yaml",
     "lint": "eslint 'src/**/*.ts'",
-    "build": "rm -rf build typings && prettier --write ./src/**/*.ts --config .prettierrc.yaml && tsc -p ."
+    "build": "rm -rf build typings && prettier --write ./src/**/*.ts --config .prettierrc.yaml && tsc -p .",
+    "build-raw": "rm -rf build typings && tsc -p ."
   }
 }
