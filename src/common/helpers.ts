@@ -236,8 +236,9 @@ export function ipToBuffer(ip: string): Buffer {
   } else if (net.isIPv6(ip)) {
     // Handle IPv6 addresses
     const address = new Address6(ip);
-    return Buffer.from(address.toByteArray());
+    return Buffer.from(address.canonicalForm().split(":").map(segment => segment.padStart(4, '0')).join(''), 'hex');
   } else {
     throw new Error('Invalid IP address format');
   }
 }
+
