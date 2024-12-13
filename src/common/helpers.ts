@@ -214,7 +214,7 @@ export {validateSocksClientOptions, validateSocksClientChainOptions};
 export function ipv4ToInt32(ip: string): number {
   const address = new Address4(ip);
   // Convert the IPv4 address parts to an integer
-  return address.toArray().reduce((acc, part) => (acc << 8) + part, 0);
+  return address.toArray().reduce((acc, part) => (acc << 8) + part, 0) >>> 0;
 }
 
 export function int32ToIpv4(int32: number): string {
