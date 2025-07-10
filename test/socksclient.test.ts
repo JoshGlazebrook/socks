@@ -98,6 +98,11 @@ describe('Validating SocksProxyOptions', () => {
     port: undefined,
   } as any;
 
+  const socksRemoteHostMaxLengthDomain: SocksRemoteHost = {
+    host: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com',
+    port: 80,
+  } as any;
+
   const socksCommandValid = 'connect';
   const socksCommandInvalid: any = 'other';
 
@@ -295,6 +300,16 @@ describe('Validating SocksProxyOptions', () => {
         proxy: socksProxyValid,
         command: socksCommandValid,
         destination: socksRemoteHostInvalidHost,
+      });
+    }, SocksClientError);
+  });
+
+   it('should throw an exception when domain length exceeds 255 bytes', () => {
+    assert.throws(() => {
+      validateSocksClientOptions({
+        proxy: socksProxyValid,
+        command: socksCommandValid,
+        destination: socksRemoteHostMaxLengthDomain,
       });
     }, SocksClientError);
   });

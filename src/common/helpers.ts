@@ -180,6 +180,7 @@ function isValidSocksRemoteHost(remoteHost: SocksRemoteHost) {
   return (
     remoteHost &&
     typeof remoteHost.host === 'string' &&
+    Buffer.byteLength(remoteHost.host) < 256 &&
     typeof remoteHost.port === 'number' &&
     remoteHost.port >= 0 &&
     remoteHost.port <= 65535
