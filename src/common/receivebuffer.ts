@@ -1,3 +1,6 @@
+// Maximum buffer size (64KB) to prevent unbounded growth from malicious proxies.
+const MAX_RECEIVE_BUFFER_SIZE = 65536;
+
 class ReceiveBuffer {
   private buffer: Buffer;
   private offset: number;
@@ -9,39 +12,48 @@ class ReceiveBuffer {
     this.originalSize = size;
   }
 
-  get length() {
+  get length(): number {
     return this.offset;
   }
 
-  append(data: Buffer): number {
-    if (!Buffer.isBuffer(data)) {
+  append(data: Buffer | Uint8Array): number {
+    if (!(data instanceof Uint8Array)) {
       throw new Error(
-        'Attempted to append a non-buffer instance to ReceiveBuffer.',
+        'Attempted to append a non-Uint8Array instance to ReceiveBuffer.',
       );
     }
 
-    if (this.offset + data.length >= this.buffer.length) {
+    if (this.offset + data.length > MAX_RECEIVE_BUFFER_SIZE) {
+      throw new Error(
+        `Receive buffer would exceed maximum size of ${MAX_RECEIVE_BUFFER_SIZE} bytes.`,
+      );
+    }
+
+    if (this.offset + data.length > this.buffer.length) {
       const tmp = this.buffer;
       this.buffer = Buffer.allocUnsafe(
-        Math.max(
-          this.buffer.length + this.originalSize,
-          this.buffer.length + data.length,
+        Math.min(
+          MAX_RECEIVE_BUFFER_SIZE,
+          Math.max(
+            this.buffer.length + this.originalSize,
+            this.buffer.length + data.length,
+          ),
         ),
       );
       tmp.copy(this.buffer);
     }
 
-    data.copy(this.buffer, this.offset);
+    this.buffer.set(data, this.offset);
     return (this.offset += data.length);
   }
 
-  peek(length: number) {
+  peek(length: number): Buffer {
     if (length > this.offset) {
       throw new Error(
         'Attempted to read beyond the bounds of the managed internal data.',
       );
     }
-    return this.buffer.slice(0, length);
+    return Buffer.from(this.buffer.subarray(0, length));
   }
 
   get(length: number): Buffer {
@@ -52,8 +64,8 @@ class ReceiveBuffer {
     }
 
     const value = Buffer.allocUnsafe(length);
-    this.buffer.slice(0, length).copy(value);
-    this.buffer.copyWithin(0, length, length + this.offset - length);
+    this.buffer.subarray(0, length).copy(value);
+    this.buffer.copyWithin(0, length, this.offset);
     this.offset -= length;
 
     return value;
