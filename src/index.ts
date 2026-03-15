@@ -4,6 +4,7 @@ export {
   SocksTimeoutError,
   SocksAuthenticationError,
   isSocksError,
+  resolveProxyType,
   SocksErrorCode,
   SocksCommand,
   Socks4Response,

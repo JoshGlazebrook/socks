@@ -32,6 +32,7 @@ import {
   ipToBuffer,
   int32ToIpv4,
   resolveProxyHost,
+  resolveProxyType,
   normalizeClientOptions,
   normalizeProxy,
 } from '../common/helpers.js';
@@ -247,6 +248,41 @@ class SocksClient extends EventEmitter<SocksClientEventMap> {
   }
 
   /**
+   * Tests whether a SOCKS proxy is reachable by connecting to a destination through it
+   * and immediately destroying the socket on success.
+   *
+   * @param proxy The proxy server to test.
+   * @param destination The remote host to connect to through the proxy.
+   * @param options Additional connection options (timeout, signal, etc.).
+   */
+  static async testConnection(
+    proxy: SocksProxy,
+    destination: SocksRemoteHost,
+    options?: Omit<SocksClientOptions, 'command' | 'proxy' | 'destination'>,
+  ): Promise<void> {
+    const info = await SocksClient.connect(proxy, destination, options);
+    info.socket.destroy();
+  }
+
+  /**
+   * Reads a SOCKS proxy URL from environment variables.
+   *
+   * Checks (in order): SOCKS_PROXY, socks_proxy, ALL_PROXY, all_proxy.
+   * Returns null if no proxy is configured in the environment.
+   *
+   * @returns A SocksProxy object, or null if no proxy environment variable is set.
+   */
+  static proxyFromEnvironment(): SocksProxy | null {
+    const url =
+      process.env.SOCKS_PROXY ||
+      process.env.socks_proxy ||
+      process.env.ALL_PROXY ||
+      process.env.all_proxy;
+    if (!url) return null;
+    return SocksClient.parseProxyUrl(url);
+  }
+
+  /**
    * Creates a new SOCKS connection chain to a destination host through 2 or more SOCKS proxies.
    *
    * Note: Only supports the connect command.
@@ -299,14 +335,27 @@ class SocksClient extends EventEmitter<SocksClientEventMap> {
               };
 
         // Creates the next connection in the chain.
-        lastResult = await SocksClient.createConnection({
-          command: 'connect',
-          proxy: nextProxy,
-          destination: nextDestination,
-          existingSocket: sock,
-          timeout: options.timeout,
-          signal: options.signal,
-        });
+        try {
+          lastResult = await SocksClient.createConnection({
+            command: 'connect',
+            proxy: nextProxy,
+            destination: nextDestination,
+            existingSocket: sock,
+            timeout: options.timeout,
+            signal: options.signal,
+          });
+        } catch (err) {
+          // Enrich the error with chain hop information for debugging
+          if (err instanceof SocksClientError && !err.detail?.hopIndex) {
+            (err as {detail?: Record<string, unknown>}).detail = {
+              ...err.detail,
+              hopIndex: i,
+              hopProxy: resolveProxyHost(nextProxy) + ':' + nextProxy.port,
+              hopTotal: proxies.length,
+            };
+          }
+          throw err;
+        }
 
         // The underlying TCP socket is always the one from the first hop;
         // subsequent hops reuse it via existingSocket.
@@ -1301,6 +1350,7 @@ export {
   SocksTimeoutError,
   SocksAuthenticationError,
   isSocksError,
+  resolveProxyType,
   SocksErrorCode,
   SocksCommand,
   Socks4Response,
