@@ -111,7 +111,7 @@ describe('Validating SocksProxyOptions', () => {
   const socketValid = new net.Socket();
   const socketInvalid: any = 'something that is not a socket';
   const socksProxiesValid: SocksProxy[] = [socksProxyValid, socksProxyValid];
-  const socksProxiesInvalidLength: SocksProxy[] = [socksProxyValid];
+  const socksProxiesInvalidLength: SocksProxy[] = [];
   const socksProxiesInvalid: any = 'not an array of proxies';
   const socksProxiesInvalidMixed: SocksProxy[] = [
     socksProxyValid,
@@ -724,17 +724,27 @@ describe('Validation error codes', () => {
     expect(err.code).toBe(SocksErrorCode.InvalidSocksCommandChain);
   });
 
-  it('should set ERR_SOCKS_INVALID_PROXIES_LENGTH for too few proxies', () => {
+  it('should set ERR_SOCKS_INVALID_PROXIES_LENGTH for empty proxies', () => {
     const err = getValidationError(() =>
       validateSocksClientChainOptions({
         command: 'connect',
         destination: validDest,
-        proxies: [validProxy],
+        proxies: [],
       }),
     );
     expect(err.code).toBe(
       SocksErrorCode.InvalidSocksClientOptionsProxiesLength,
     );
+  });
+
+  it('should accept a single proxy in chain', () => {
+    expect(() =>
+      validateSocksClientChainOptions({
+        command: 'connect',
+        destination: validDest,
+        proxies: [validProxy],
+      }),
+    ).not.toThrow();
   });
 });
 

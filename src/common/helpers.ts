@@ -127,7 +127,7 @@ function validateSocksClientChainOptions(options: SocksClientChainOptions) {
     !(
       options.proxies &&
       Array.isArray(options.proxies) &&
-      options.proxies.length >= 2
+      options.proxies.length >= 1
     )
   ) {
     throw new SocksClientError(ERRORS.InvalidSocksClientOptionsProxiesLength, {

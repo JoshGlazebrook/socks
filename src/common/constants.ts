@@ -14,7 +14,7 @@ const ERRORS = {
   InvalidSocksClientOptionsExistingSocket: 'An invalid existing socket was provided. This should be an instance of stream.Duplex.',
   InvalidSocksClientOptionsProxy: 'Invalid SOCKS proxy details were provided.',
   InvalidSocksClientOptionsTimeout: 'An invalid timeout value was provided. Please enter a value above 0 (in ms).',
-  InvalidSocksClientOptionsProxiesLength: 'At least two socks proxies must be provided for chaining.',
+  InvalidSocksClientOptionsProxiesLength: 'At least one socks proxy must be provided for chaining.',
   InvalidSocksClientOptionsCustomAuthRange: 'Custom auth must be a value between 0x80 and 0xFE.',
   InvalidSocksClientOptionsCustomAuthOptions: 'When a custom_auth_method is provided, custom_auth_request_handler, custom_auth_response_size, and custom_auth_response_handler must also be provided and valid.',
   InvalidSocksClientOptionsCredentialLength: 'userId and password must each be at most 255 bytes (RFC 1929).',
