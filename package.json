@@ -1,10 +1,31 @@
 {
   "name": "socks",
-  "private": false,
-  "version": "2.8.7",
+  "version": "3.0.0",
+  "type": "commonjs",
   "description": "Fully featured SOCKS proxy client supporting SOCKSv4, SOCKSv4a, and SOCKSv5. Includes Bind and Associate functionality.",
-  "main": "build/index.js",
-  "typings": "typings/index.d.ts",
+  "main": "./build/cjs/index.js",
+  "module": "./build/esm/index.js",
+  "types": "./build/cjs/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./build/esm/index.d.ts",
+        "default": "./build/esm/index.js"
+      },
+      "require": {
+        "types": "./build/cjs/index.d.ts",
+        "default": "./build/cjs/index.js"
+      },
+      "default": "./build/cjs/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "files": [
+    "build/",
+    "LICENSE",
+    "README.md"
+  ],
   "homepage": "https://github.com/JoshGlazebrook/socks/",
   "repository": {
     "type": "git",
@@ -20,39 +41,42 @@
     "socks 4",
     "socks 5",
     "socks4",
-    "socks5"
+    "socks5",
+    "network",
+    "tcp",
+    "socks5h"
   ],
   "engines": {
-    "node": ">= 10.0.0",
-    "npm": ">= 3.0.0"
+    "node": ">= 20.0.0"
   },
   "author": "Josh Glazebrook",
   "contributors": [
     "castorw"
   ],
   "license": "MIT",
-  "readmeFilename": "README.md",
   "devDependencies": {
-    "@types/mocha": "^10.0.6",
-    "@types/node": "^20.11.17",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "eslint": "^8.20.0",
-    "mocha": "^10.0.0",
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^20",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.39.4",
     "prettier": "^3.2.5",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.57.0",
+    "vitest": "^3.2.1"
   },
   "dependencies": {
-    "ip-address": "^10.0.1",
-    "smart-buffer": "^4.2.0"
+    "ip-address": "^10.0.1"
   },
   "scripts": {
-    "prepublish": "npm install -g typescript && npm run build",
-    "test": "NODE_ENV=test mocha --recursive --require ts-node/register test/**/*.ts",
-    "prettier": "prettier --write ./src/**/*.ts --config .prettierrc.yaml",
-    "lint": "eslint 'src/**/*.ts'",
-    "build": "rm -rf build typings && prettier --write ./src/**/*.ts --config .prettierrc.yaml && tsc -p .",
-    "build-raw": "rm -rf build typings && tsc -p ."
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf build coverage",
+    "prettier": "prettier --write 'src/**/*.ts' 'test/**/*.ts' --config .prettierrc.yaml",
+    "lint:fix": "eslint --fix 'src/**/*.ts' 'test/**/*.ts'",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint 'src/**/*.ts' 'test/**/*.ts'",
+    "build": "rm -rf build && tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json && echo '{\"type\":\"module\"}' > build/esm/package.json"
   }
 }

@@ -4,20 +4,34 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+permissions:
+  contents: read
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [16.x, 18.x, 20.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [20.x, 22.x, 24.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci
+    - run: npm audit --omit=dev
     - run: npm run build
-    - run: npm run test
+    - run: npm run typecheck
+    - run: npm run lint
+    - run: npm run test:coverage
+    - name: Smoke test CJS
+      run: node -e "const { SocksClient } = require('./build/cjs/index.js'); console.log('CJS OK:', typeof SocksClient)"
+    - name: Smoke test ESM
+      run: node --input-type=module -e "import { SocksClient } from './build/esm/index.js'; console.log('ESM OK:', typeof SocksClient)"
+    - name: Validate package exports (publint)
+      run: npx publint
+    - name: Validate TypeScript types (attw)
+      run: npx @arethetypeswrong/cli --pack .
