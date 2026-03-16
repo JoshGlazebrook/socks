@@ -1,364 +1,313 @@
-# socks  [![Build Status](https://travis-ci.org/JoshGlazebrook/socks.svg?branch=master)](https://travis-ci.org/JoshGlazebrook/socks)  [![Coverage Status](https://coveralls.io/repos/github/JoshGlazebrook/socks/badge.svg?branch=master)](https://coveralls.io/github/JoshGlazebrook/socks?branch=v2)
+# socks  [![CI](https://github.com/JoshGlazebrook/socks/actions/workflows/nodejs.yml/badge.svg)](https://github.com/JoshGlazebrook/socks/actions/workflows/nodejs.yml)
 
 Fully featured SOCKS proxy client supporting SOCKSv4, SOCKSv4a, and SOCKSv5. Includes Bind and Associate functionality.
 
-> Looking for Node.js agent? Check [node-socks-proxy-agent](https://github.com/TooTallNate/node-socks-proxy-agent).
+> Looking for a Node.js HTTP agent? Check out [node-socks-proxy-agent](https://github.com/TooTallNate/node-socks-proxy-agent).
 
 ### Features
 
 * Supports SOCKS v4, v4a, v5, and v5h protocols.
 * Supports the CONNECT, BIND, and ASSOCIATE commands.
-* Supports callbacks, promises, and events for proxy connection creation async flow control.
-* Supports proxy chaining (CONNECT only).
-* Supports user/password authentication.
-* Supports custom authentication.
-* Built in UDP frame creation & parse functions.
-* Created with TypeScript, type definitions are provided.
+* Supports proxy chaining (CONNECT only) with optional chain randomization.
+* Supports user/password authentication and custom authentication methods.
+* Built-in UDP frame creation and parsing.
+* AbortSignal support for cancellable connections.
+* `Symbol.dispose` support for automatic resource cleanup with `using`.
+* Structured error hierarchy with error codes and credential redaction.
+* Dual ESM/CJS -- both `import` and `require` work.
+* Written in TypeScript with full type definitions included.
 
 ### Requirements
 
-* Node.js v10.0+  (Please use [v1](https://github.com/JoshGlazebrook/socks/tree/82d83923ad960693d8b774cafe17443ded7ed584) for older versions of Node.js)
-
-### Looking for v1?
-* Docs for v1 are available [here](https://github.com/JoshGlazebrook/socks/tree/82d83923ad960693d8b774cafe17443ded7ed584)
+* Node.js >= 20.0.0
 
 ## Installation
 
-`yarn add socks`
-
-or
-
-`npm install --save socks`
+```
+npm install socks
+```
 
 ## Usage
 
 ```typescript
-// TypeScript
-import { SocksClient, SocksClientOptions, SocksClientChainOptions } from 'socks';
-
-// ES6 JavaScript
+// ESM
 import { SocksClient } from 'socks';
 
-// Legacy JavaScript
-const SocksClient = require('socks').SocksClient;
+// CommonJS
+const { SocksClient } = require('socks');
 ```
 
 ## Quick Start Example
 
-Connect to github.com (192.30.253.113) on port 80, using a SOCKS proxy.
+Connect to github.com on port 80 through a SOCKS proxy.
 
-```javascript
-const options = {
+```typescript
+const info = await SocksClient.createConnection({
   proxy: {
-    host: '159.203.75.200', // ipv4 or ipv6 or hostname
+    host: '159.203.75.200',
     port: 1080,
-    type: 5 // Proxy version (4 or 5)
+    type: 5
   },
-
-  command: 'connect', // SOCKS command (createConnection factory function only supports the connect command)
-
+  command: 'connect',
   destination: {
-    host: '192.30.253.113', // github.com (hostname lookups are supported with SOCKS v4a and 5)
+    host: 'github.com',
     port: 80
   }
-};
+});
 
-// Async/Await
-try {
-  const info = await SocksClient.createConnection(options);
+console.log(info.socket);
+// <net.Socket> -- a raw TCP socket connected to the destination through the proxy
+```
 
-  console.log(info.socket);
-  // <Socket ...>  (this is a raw net.Socket that is established to the destination host through the given proxy server)
-} catch (err) {
-  // Handle errors
+Or use the convenience `connect` method:
+
+```typescript
+const info = await SocksClient.connect(
+  { host: '159.203.75.200', port: 1080, type: 5 },
+  { host: 'github.com', port: 80 }
+);
+
+info.socket.write('GET / HTTP/1.1\r\nHost: github.com\r\n\r\n');
+```
+
+### Connecting from a proxy URL
+
+Use `connectFromUrl` to connect in a single call from a SOCKS proxy URL string:
+
+```typescript
+const info = await SocksClient.connectFromUrl(
+  'socks5://user:pass@127.0.0.1:1080',
+  { host: 'example.com', port: 443 }
+);
+```
+
+Or parse the URL separately with `parseProxyUrl`:
+
+```typescript
+const proxy = SocksClient.parseProxyUrl('socks5://user:pass@127.0.0.1:1080');
+// { host: '127.0.0.1', port: 1080, type: 5, userId: 'user', password: 'pass' }
+
+const info = await SocksClient.connect(proxy, { host: 'example.com', port: 443 });
+```
+
+Supported URL schemes: `socks://`, `socks4://`, `socks4a://`, `socks5://`, `socks5h://`.
+
+### Reading a proxy from the environment
+
+`proxyFromEnvironment()` reads from `SOCKS_PROXY`, `socks_proxy`, `ALL_PROXY`, or `all_proxy` (checked in that order):
+
+```typescript
+const proxy = SocksClient.proxyFromEnvironment();
+
+if (proxy) {
+  const info = await SocksClient.connect(proxy, { host: 'example.com', port: 443 });
 }
+```
 
-// Promises
-SocksClient.createConnection(options)
-.then(info => {
-  console.log(info.socket);
-  // <Socket ...>  (this is a raw net.Socket that is established to the destination host through the given proxy server)
-})
-.catch(err => {
-  // Handle errors
+### TLS over SOCKS
+
+After establishing a SOCKS connection, upgrade to TLS for HTTPS, SMTPS, or any TLS-secured protocol:
+
+```typescript
+import * as tls from 'node:tls';
+
+const info = await SocksClient.connect(
+  { host: '127.0.0.1', port: 1080, type: 5 },
+  { host: 'example.com', port: 443 }
+);
+
+// Upgrade the raw TCP socket to TLS
+const tlsSocket = tls.connect({
+  socket: info.socket,
+  servername: 'example.com' // Required for SNI
 });
 
-// Callbacks
-SocksClient.createConnection(options, (err, info) => {
-  if (!err) {
-    console.log(info.socket);
-    // <Socket ...>  (this is a raw net.Socket that is established to the destination host through the given proxy server)
-  } else {
-    // Handle errors
+tlsSocket.on('secureConnect', () => {
+  tlsSocket.write('GET / HTTP/1.1\r\nHost: example.com\r\n\r\n');
+});
+
+tlsSocket.on('data', (data) => {
+  console.log(data.toString());
+});
+```
+
+### Using with an HTTP agent
+
+For HTTP/HTTPS requests through a SOCKS proxy, use [socks-proxy-agent](https://github.com/TooTallNate/node-socks-proxy-agent):
+
+```typescript
+import { SocksProxyAgent } from 'socks-proxy-agent';
+
+const agent = new SocksProxyAgent('socks5://127.0.0.1:1080');
+
+const res = await fetch('https://example.com', { agent } as any);
+```
+
+### AbortSignal support
+
+```typescript
+const controller = new AbortController();
+
+// Cancel the connection after 5 seconds
+setTimeout(() => controller.abort(), 5000);
+
+try {
+  const info = await SocksClient.createConnection({
+    proxy: { host: '159.203.75.200', port: 1080, type: 5 },
+    command: 'connect',
+    destination: { host: 'example.com', port: 80 },
+    signal: controller.signal
+  });
+} catch (err) {
+  if (isSocksError(err) && err.code === SocksErrorCode.ConnectionAborted) {
+    console.log('Connection was cancelled');
   }
-});
+}
+```
+
+### Automatic cleanup with `using`
+
+The returned connection info implements `Symbol.dispose`, so you can use the `using` keyword (TypeScript 5.2+ / Node.js with `--harmony-using`) for automatic socket cleanup:
+
+```typescript
+{
+  using info = await SocksClient.createConnection({
+    proxy: { host: '159.203.75.200', port: 1080, type: 5 },
+    command: 'connect',
+    destination: { host: 'example.com', port: 80 }
+  });
+
+  info.socket.write('GET / HTTP/1.1\r\nHost: example.com\r\n\r\n');
+  // Socket is automatically destroyed when `info` goes out of scope
+}
 ```
 
 ## Chaining Proxies
 
-**Note:** Chaining is only supported when using the SOCKS connect command, and chaining can only be done through the special factory chaining function.
+Chain through one or more SOCKS proxies. Only the `connect` command is supported when chaining.
 
-This example makes a proxy chain through two SOCKS proxies to ip-api.com. Once the connection to the destination is established it sends an HTTP request to get a JSON response that returns ip info for the requesting ip.
-
-```javascript
-const options = {
+```typescript
+const info = await SocksClient.createConnectionChain({
+  proxies: [
+    { host: '159.203.75.235', port: 1081, type: 5 },
+    { host: '104.131.124.203', port: 1081, type: 5 }
+  ],
+  command: 'connect',
   destination: {
-    host: 'ip-api.com', // host names are supported with SOCKS v4a and SOCKS v5.
+    host: 'ip-api.com',
     port: 80
-  },
-  command: 'connect', // Only the connect command is supported when chaining proxies.
-  proxies: [ // The chain order is the order in the proxies array, meaning the last proxy will establish a connection to the destination.
-    {
-      host: '159.203.75.235', // ipv4, ipv6, or hostname
-      port: 1081,
-      type: 5
-    },
-    {
-      host: '104.131.124.203', // ipv4, ipv6, or hostname
-      port: 1081,
-      type: 5
-    }
-  ]
-}
-
-// Async/Await
-try {
-  const info = await SocksClient.createConnectionChain(options);
-
-  console.log(info.socket);
-  // <Socket ...>  (this is a raw net.Socket that is established to the destination host through the given proxy servers)
-
-  console.log(info.socket.remoteAddress) // The remote address of the returned socket is the first proxy in the chain.
-  // 159.203.75.235
-
-  info.socket.write('GET /json HTTP/1.1\nHost: ip-api.com\n\n');
-  info.socket.on('data', (data) => {
-    console.log(data.toString()); // ip-api.com sees that the last proxy in the chain (104.131.124.203) is connected to it.
-    /*
-      HTTP/1.1 200 OK
-      Access-Control-Allow-Origin: *
-      Content-Type: application/json; charset=utf-8
-      Date: Sun, 24 Dec 2017 03:47:51 GMT
-      Content-Length: 300
-
-      {
-        "as":"AS14061 Digital Ocean, Inc.",
-        "city":"Clifton",
-        "country":"United States",
-        "countryCode":"US",
-        "isp":"Digital Ocean",
-        "lat":40.8326,
-        "lon":-74.1307,
-        "org":"Digital Ocean",
-        "query":"104.131.124.203",
-        "region":"NJ",
-        "regionName":"New Jersey",
-        "status":"success",
-        "timezone":"America/New_York",
-        "zip":"07014"
-      }
-    */
-  });
-} catch (err) {
-  // Handle errors
-}
-
-// Promises
-SocksClient.createConnectionChain(options)
-.then(info => {
-  console.log(info.socket);
-  // <Socket ...>  (this is a raw net.Socket that is established to the destination host through the given proxy server)
-
-  console.log(info.socket.remoteAddress) // The remote address of the returned socket is the first proxy in the chain.
-  // 159.203.75.235
-
-  info.socket.write('GET /json HTTP/1.1\nHost: ip-api.com\n\n');
-  info.socket.on('data', (data) => {
-    console.log(data.toString()); // ip-api.com sees that the last proxy in the chain (104.131.124.203) is connected to it.
-    /*
-      HTTP/1.1 200 OK
-      Access-Control-Allow-Origin: *
-      Content-Type: application/json; charset=utf-8
-      Date: Sun, 24 Dec 2017 03:47:51 GMT
-      Content-Length: 300
-
-      {
-        "as":"AS14061 Digital Ocean, Inc.",
-        "city":"Clifton",
-        "country":"United States",
-        "countryCode":"US",
-        "isp":"Digital Ocean",
-        "lat":40.8326,
-        "lon":-74.1307,
-        "org":"Digital Ocean",
-        "query":"104.131.124.203",
-        "region":"NJ",
-        "regionName":"New Jersey",
-        "status":"success",
-        "timezone":"America/New_York",
-        "zip":"07014"
-      }
-    */
-  });
-})
-.catch(err => {
-  // Handle errors
+  }
 });
 
-// Callbacks
-SocksClient.createConnectionChain(options, (err, info) => {
-  if (!err) {
-    console.log(info.socket);
-    // <Socket ...>  (this is a raw net.Socket that is established to the destination host through the given proxy server)
+// The socket's remote address is the first proxy in the chain
+console.log(info.socket.remoteAddress); // 159.203.75.235
 
-    console.log(info.socket.remoteAddress) // The remote address of the returned socket is the first proxy in the chain.
-  // 159.203.75.235
-
-  info.socket.write('GET /json HTTP/1.1\nHost: ip-api.com\n\n');
-  info.socket.on('data', (data) => {
-    console.log(data.toString()); // ip-api.com sees that the last proxy in the chain (104.131.124.203) is connected to it.
-    /*
-      HTTP/1.1 200 OK
-      Access-Control-Allow-Origin: *
-      Content-Type: application/json; charset=utf-8
-      Date: Sun, 24 Dec 2017 03:47:51 GMT
-      Content-Length: 300
-
-      {
-        "as":"AS14061 Digital Ocean, Inc.",
-        "city":"Clifton",
-        "country":"United States",
-        "countryCode":"US",
-        "isp":"Digital Ocean",
-        "lat":40.8326,
-        "lon":-74.1307,
-        "org":"Digital Ocean",
-        "query":"104.131.124.203",
-        "region":"NJ",
-        "regionName":"New Jersey",
-        "status":"success",
-        "timezone":"America/New_York",
-        "zip":"07014"
-      }
-    */
-  });
-  } else {
-    // Handle errors
-  }
+info.socket.write('GET /json HTTP/1.1\r\nHost: ip-api.com\r\n\r\n');
+info.socket.on('data', (data) => {
+  // ip-api.com sees the last proxy (104.131.124.203) as the client
+  console.log(data.toString());
 });
 ```
 
+Chain options also support `signal` for cancellation and `randomizeChain` to shuffle the proxy order:
+
+```typescript
+const info = await SocksClient.createConnectionChain({
+  proxies: [
+    { host: '159.203.75.235', port: 1081, type: 5 },
+    { host: '104.131.124.203', port: 1081, type: 5 },
+    { host: '192.241.165.30', port: 1081, type: 5 }
+  ],
+  command: 'connect',
+  destination: { host: 'example.com', port: 443 },
+  randomizeChain: true,
+  signal: AbortSignal.timeout(10000)
+});
+```
+
+**Note:** The `timeout` option applies per-hop, not to the entire chain. If you need a total chain timeout, use `signal: AbortSignal.timeout(ms)` instead.
+
+When a chain fails, the error's `detail` includes hop information (`hopIndex`, `hopProxy`, `hopTotal`) to help identify which proxy in the chain caused the failure.
+
 ## Bind Example (TCP Relay)
 
-When the bind command is sent to a SOCKS v4/v5 proxy server, the proxy server starts listening on a new TCP port and the proxy relays then remote host information back to the client. When another remote client connects to the proxy server on this port the SOCKS proxy sends a notification that an incoming connection has been accepted to the initial client and a full duplex stream is now established to the initial client and the client that connected to that special port.
+When the `bind` command is sent to a SOCKS proxy, the proxy starts listening on a new TCP port for an incoming connection. Once a remote client connects, a full duplex stream is established. This is commonly used for protocols like FTP where the server needs to connect back to the client.
 
-```javascript
-const options = {
+```typescript
+const client = new SocksClient({
   proxy: {
-    host: '159.203.75.235', // ipv4, ipv6, or hostname
+    host: '159.203.75.235',
     port: 1081,
     type: 5
   },
-
   command: 'bind',
-
-  // When using BIND, the destination should be the remote client that is expected to connect to the SOCKS proxy. Using 0.0.0.0 makes the Proxy accept any incoming connection on that port.
   destination: {
     host: '0.0.0.0',
     port: 0
   }
-};
-
-// Creates a new SocksClient instance.
-const client = new SocksClient(options);
-
-// When the SOCKS proxy has bound a new port and started listening, this event is fired.
-client.on('bound', info => {
-  console.log(info.remoteHost);
-  /*
-  {
-    host: "159.203.75.235",
-    port: 57362
-  }
-  */
 });
 
-// When a client connects to the newly bound port on the SOCKS proxy, this event is fired.
-client.on('established', info => {
-  // info.remoteHost is the remote address of the client that connected to the SOCKS proxy.
+// The proxy has allocated a port and is listening
+client.on('bound', (info) => {
   console.log(info.remoteHost);
-  /*
-    host: 67.171.34.23,
-    port: 49823
-  */
+  // { host: '159.203.75.235', port: 57362 }
+});
+
+// A remote client connected to the bound port
+client.on('established', (info) => {
+  console.log(info.remoteHost);
+  // { host: '67.171.34.23', port: 49823 }
 
   console.log(info.socket);
-  // <Socket ...>  (This is a raw net.Socket that is a connection between the initial client and the remote client that connected to the proxy)
+  // <net.Socket> -- full duplex connection between you and the remote client
 
-  // Handle received data...
-  info.socket.on('data', data => {
-    console.log('recv', data);
+  info.socket.on('data', (data) => {
+    console.log('received:', data);
   });
 });
 
-// An error occurred trying to establish this SOCKS connection.
-client.on('error', err => {
+client.on('error', (err) => {
   console.error(err);
 });
 
-// Start connection to proxy
 client.connect();
 ```
 
 ## Associate Example (UDP Relay)
 
-When the associate command is sent to a SOCKS v5 proxy server, it sets up a UDP relay that allows the client to send UDP packets to a remote host through the proxy server, and also receive UDP packet responses back through the proxy server.
+When the `associate` command is sent to a SOCKS v5 proxy, it sets up a UDP relay that allows the client to send and receive UDP packets through the proxy.
 
-```javascript
-const options = {
+```typescript
+import * as dgram from 'node:dgram';
+
+const client = new SocksClient({
   proxy: {
-    host: '159.203.75.235', // ipv4, ipv6, or hostname
+    host: '159.203.75.235',
     port: 1081,
     type: 5
   },
-
   command: 'associate',
-
-  // When using associate, the destination should be the remote client that is expected to send UDP packets to the proxy server to be forwarded. This should be your local ip, or optionally the wildcard address (0.0.0.0)  UDP Client <-> Proxy <-> UDP Client
   destination: {
     host: '0.0.0.0',
     port: 0
   }
-};
+});
 
-// Create a local UDP socket for sending packets to the proxy.
 const udpSocket = dgram.createSocket('udp4');
 udpSocket.bind();
 
-// Listen for incoming UDP packets from the proxy server.
+// Parse incoming UDP frames from the proxy
 udpSocket.on('message', (message, rinfo) => {
   console.log(SocksClient.parseUDPFrame(message));
-  /*
-  { frameNumber: 0,
-    remoteHost: { host: '165.227.108.231', port: 4444 }, // The remote host that replied with a UDP packet
-    data: <Buffer 74 65 73 74 0a> // The data
-  }
-  */
+  // { frameNumber: 0, remoteHost: { host: '165.227.108.231', port: 4444 }, data: <Buffer ...> }
 });
 
-let client = new SocksClient(options);
-
-// When the UDP relay is established, this event is fired and includes the UDP relay port to send data to on the proxy server.
-client.on('established', info => {
+// UDP relay is established
+client.on('established', (info) => {
   console.log(info.remoteHost);
-  /*
-    {
-      host: '159.203.75.235',
-      port: 44711
-    }
-  */
+  // { host: '159.203.75.235', port: 44711 }
 
-  // Send 'hello' to 165.227.108.231:4444
+  // Send data to 165.227.108.231:4444 through the relay
   const packet = SocksClient.createUDPFrame({
     remoteHost: { host: '165.227.108.231', port: 4444 },
     data: Buffer.from('hello')
@@ -366,321 +315,466 @@ client.on('established', info => {
   udpSocket.send(packet, info.remoteHost.port, info.remoteHost.host);
 });
 
-// Start connection
+client.on('error', (err) => {
+  console.error(err);
+});
+
 client.connect();
 ```
 
-**Note:** The associate TCP connection to the proxy must remain open for the UDP relay to work.
+**Note:** The TCP connection to the proxy must remain open for the UDP relay to work.
 
-## Additional Examples
+## DNS Resolution
 
-[Documentation](docs/index.md)
+Understanding when DNS resolution happens locally vs. on the proxy server is important for privacy and functionality:
 
+- **SOCKS5 with hostnames:** When you provide a hostname as the destination (e.g., `host: 'example.com'`), the hostname is sent directly to the proxy server, which resolves it. This means **no local DNS lookup occurs**, which is important for privacy (e.g., when using Tor) and for accessing hosts that are only resolvable from the proxy's network.
 
-## Migrating from v1
+- **SOCKS5 with IP addresses:** When you provide an IP address, it is sent directly to the proxy. No DNS is involved.
 
-Looking for a guide to migrate from v1? Look [here](docs/migratingFromV1.md)
+- **SOCKS4a with hostnames:** Same as SOCKS5 -- the hostname is sent to the proxy for remote resolution. Note that both `type: 4` and `type: 'socks4a'` use the SOCKS4a extension when given a hostname.
 
-## Api Reference:
+- **SOCKS4 with IP addresses:** The IP address is sent directly. SOCKS4 only supports IPv4 addresses.
 
-**Note:** socks includes full TypeScript definitions. These can even be used without using TypeScript as most IDEs (such as VS Code) will use these type definition files for auto completion intellisense even in JavaScript files.
+- **Proxy host resolution:** The proxy's own hostname (e.g., `proxy: { host: 'proxy.example.com', ... }`) is always resolved locally by Node.js before connecting.
+
+**For Tor users:** Always use hostnames (not IP addresses) as the destination to ensure DNS resolution happens through the Tor network. Use `.onion` addresses directly as hostnames.
+
+```typescript
+// Good -- DNS resolved by Tor
+const info = await SocksClient.connect(
+  { host: '127.0.0.1', port: 9050, type: 5 },
+  { host: 'example.com', port: 443 }
+);
+
+// Also good -- .onion addresses work with SOCKS5
+const info = await SocksClient.connect(
+  { host: '127.0.0.1', port: 9050, type: 5 },
+  { host: 'duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion', port: 443 }
+);
+```
+
+## Error Handling
+
+v3 introduces a structured error hierarchy with error codes and type guards.
+
+### Error classes
+
+| Class | When |
+| --- | --- |
+| `SocksClientError` | Base class for all SOCKS errors |
+| `SocksTimeoutError` | Connection to the proxy timed out |
+| `SocksAuthenticationError` | SOCKS5 authentication failed |
+
+All error classes extend `Error` and include:
+- `code` -- a string error code from `SocksErrorCode` (e.g. `'ERR_SOCKS_PROXY_TIMEOUT'`)
+- `options` -- the original connection options (with credentials redacted)
+- `detail` -- additional context about the error (when available)
+- `cause` -- the underlying error (when applicable)
+
+### The `isSocksError` type guard
+
+Use `isSocksError()` to narrow caught errors in `try`/`catch` blocks:
+
+```typescript
+import { SocksClient, isSocksError, SocksErrorCode, SocksTimeoutError, SocksAuthenticationError } from 'socks';
+
+try {
+  const info = await SocksClient.createConnection(options);
+} catch (err) {
+  if (isSocksError(err)) {
+    console.error('SOCKS error:', err.code, err.message);
+
+    // Check for specific error codes
+    if (err.code === SocksErrorCode.ProxyConnectionTimedOut) {
+      console.error('Connection timed out');
+    }
+
+    // Or use instanceof for error subclasses
+    if (err instanceof SocksTimeoutError) {
+      console.error('Timed out');
+    }
+    if (err instanceof SocksAuthenticationError) {
+      console.error('Auth failed');
+    }
+
+    // Access additional context from the detail property
+    if (err.detail) {
+      console.error('Detail:', err.detail);
+      // e.g. { socks5Response: 5, socks5ResponseName: 'ConnectionRefused' }
+      // e.g. { hopIndex: 1, hopProxy: '104.131.124.203:1081', hopTotal: 3 }
+    }
+  }
+}
+```
+
+### Error codes
+
+All error codes are available on the `SocksErrorCode` object:
+
+| Code | Description |
+| --- | --- |
+| `ERR_SOCKS_PROXY_TIMEOUT` | Proxy connection timed out |
+| `ERR_SOCKS5_AUTH_FAILED` | SOCKS5 authentication failed |
+| `ERR_SOCKS_CONNECTION_ABORTED` | Connection aborted via AbortSignal |
+| `ERR_SOCKS_SOCKET_CLOSED` | Socket was closed unexpectedly |
+| `ERR_SOCKS_SOCKET_ERROR` | Underlying socket error |
+| `ERR_SOCKS4_PROXY_REJECTED` | SOCKS4 proxy rejected the connection |
+| `ERR_SOCKS5_PROXY_REJECTED` | SOCKS5 proxy rejected the connection |
+| `ERR_SOCKS_INVALID_COMMAND` | Invalid SOCKS command |
+| `ERR_SOCKS_INVALID_DESTINATION` | Invalid destination host |
+| `ERR_SOCKS_INVALID_PROXY` | Invalid proxy configuration |
+| `ERR_SOCKS_INVALID_TIMEOUT` | Invalid timeout value |
+
+See the `SocksErrorCode` export for the full list.
+
+## API Reference
+
+**Note:** socks includes full TypeScript definitions. These provide auto-completion and inline documentation in editors like VS Code, even in JavaScript files.
 
 * Class: SocksClient
-  * [new SocksClient(options[, callback])](#new-socksclientoptions)
-  * [Class Method: SocksClient.createConnection(options[, callback])](#class-method-socksclientcreateconnectionoptions-callback)
-  * [Class Method: SocksClient.createConnectionChain(options[, callback])](#class-method-socksclientcreateconnectionchainoptions-callback)
-  * [Class Method: SocksClient.createUDPFrame(options)](#class-method-socksclientcreateudpframedetails)
-  * [Class Method: SocksClient.parseUDPFrame(data)](#class-method-socksclientparseudpframedata)
+  * [new SocksClient(options)](#new-socksclientoptions)
+  * [Static: SocksClient.createConnection(options)](#socksclientcreateconnectionoptions)
+  * [Static: SocksClient.connect(proxy, destination, options?)](#socksclientconnectproxy-destination-options)
+  * [Static: SocksClient.connectFromUrl(proxyUrl, destination, options?)](#socksclientconnectfromurlproxyurl-destination-options)
+  * [Static: SocksClient.createConnectionChain(options)](#socksclientcreateconnectionchainoptions)
+  * [Static: SocksClient.testConnection(proxy, destination, options?)](#socksclienttestconnectionproxy-destination-options)
+  * [Static: SocksClient.parseProxyUrl(url)](#socksclientparseproqurlurl)
+  * [Static: SocksClient.proxyFromEnvironment()](#socksclientproxyfromenvironment)
+  * [Static: SocksClient.createUDPFrame(details)](#socksclientcreateudpframedetails)
+  * [Static: SocksClient.parseUDPFrame(data)](#socksclientparseudpframedata)
   * [Event: 'error'](#event-error)
   * [Event: 'bound'](#event-bound)
   * [Event: 'established'](#event-established)
   * [client.connect()](#clientconnect)
-  * [client.socksClientOptions](#clientconnect)
-
-### SocksClient
-
-SocksClient establishes SOCKS proxy connections to remote destination hosts. These proxy connections are fully transparent to the server and once established act as full duplex streams. SOCKS v4, v4a, v5, and v5h are supported, as well as the connect, bind, and associate commands.
-
-SocksClient supports creating connections using callbacks, promises, and async/await flow control using two static factory functions createConnection and createConnectionChain. It also internally extends EventEmitter which results in allowing event handling based async flow control.
+  * [client.socksClientOptions](#clientsocksclientoptions)
+* Utilities
+  * [resolveProxyType(type)](#resolveproxytypetype)
 
 **SOCKS Compatibility Table**
 
-Note: When using 4a please specify type: 4, and when using 5h please specify type 5.
+Note: When using 4a, specify `type: 4`. When using 5h, specify `type: 5`.
 
-| Socks Version | TCP | UDP | IPv4 | IPv6 | Hostname |
+| SOCKS Version | TCP | UDP | IPv4 | IPv6 | Hostname |
 | --- | :---: | :---: | :---: | :---: | :---: |
-| SOCKS v4 | ✅ | ❌ | ✅ | ❌ | ❌ |
-| SOCKS v4a | ✅ | ❌ | ✅ | ❌ | ✅ |
-| SOCKS v5 (includes v5h) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| SOCKS v4 | Yes | No | Yes | No | No |
+| SOCKS v4a | Yes | No | Yes | No | Yes |
+| SOCKS v5 (includes v5h) | Yes | Yes | Yes | Yes | Yes |
+
+---
 
 ### new SocksClient(options)
 
-* ```options``` {SocksClientOptions} - An object describing the SOCKS proxy to use, the command to send and establish, and the destination host to connect to.
+* `options` **SocksClientOptions** -- Connection options (see below).
+
+Creates a new SocksClient instance. Use the event-based API (`client.on(...)` / `client.connect()`) for `bind` and `associate` commands. For `connect`, prefer the static factory methods.
 
 ### SocksClientOptions
 
 ```typescript
-{
+interface SocksClientOptions {
   proxy: {
-    host: '159.203.75.200', // ipv4, ipv6, or hostname
-    port: 1080,
-    type: 5, // Proxy version (4 or 5). For v4a use 4, for v5h use 5.
+    host: string;              // IPv4, IPv6, or hostname
+    port: number;
+    type: 4 | 5;              // SOCKS version (use 4 for v4a, 5 for v5h)
 
-    // Optional fields
-    userId: 'some username', // Used for SOCKS4 userId auth, and SOCKS5 user/pass auth in conjunction with password.
-    password: 'some password', // Used in conjunction with userId for user/pass auth for SOCKS5 proxies.
-    custom_auth_method: 0x80,  // If using a custom auth method, specify the type here. If this is set, ALL other custom_auth_*** options must be set as well.
-    custom_auth_request_handler: async () =>. {
-      // This will be called when it's time to send the custom auth handshake. You must return a Buffer containing the data to send as your authentication.
-      return Buffer.from([0x01,0x02,0x03]);
-    },
-    // This is the expected size (bytes) of the custom auth response from the proxy server.
-    custom_auth_response_size: 2,
-    // This is called when the auth response is received. The received packet is passed in as a Buffer, and you must return a boolean indicating the response from the server said your custom auth was successful or failed.
-    custom_auth_response_handler: async (data) => {
-      return data[1] === 0x00;
-    }
-  },
+    // Authentication (optional)
+    userId?: string;           // SOCKS4 userId or SOCKS5 username
+    password?: string;         // SOCKS5 password
 
-  command: 'connect', // connect, bind, associate
+    // Custom authentication (optional, all four must be set together)
+    customAuthMethod?: number;                              // Auth type (0x80-0xFE)
+    customAuthRequestHandler?: () => Promise<Buffer>;       // Returns auth payload
+    customAuthResponseSize?: number;                        // Expected response size in bytes
+    customAuthResponseHandler?: (data: Buffer) => Promise<boolean>;  // Returns true if auth succeeded
+  };
+
+  command: 'connect' | 'bind' | 'associate';
 
   destination: {
-    host: '192.30.253.113', // ipv4, ipv6, hostname. Hostnames work with v4a and v5.
-    port: 80
-  },
+    host: string;              // IPv4, IPv6, or hostname (hostname requires v4a or v5)
+    port: number;
+  };
 
-  // Optional fields
-  timeout: 30000, // How long to wait to establish a proxy connection. (defaults to 30 seconds)
-
-  set_tcp_nodelay: true // If true, will turn on the underlying sockets TCP_NODELAY option.
+  // Optional
+  timeout?: number;            // Connection timeout in ms (default: 30000)
+  signal?: AbortSignal;        // AbortSignal for cancellation
+  existingSocket?: Duplex;     // Use an existing socket instead of creating one
+  setTcpNoDelay?: boolean;     // Set TCP_NODELAY (default: true)
+  socketOptions?: SocketConnectOpts;  // Additional TCP socket options
 }
 ```
 
-### Class Method: SocksClient.createConnection(options[, callback])
-* ```options``` { SocksClientOptions } - An object describing the SOCKS proxy to use, the command to send and establish, and the destination host to connect to.
-* ```callback``` { Function } - Optional callback function that is called when the proxy connection is established, or an error occurs.
-* ```returns``` { Promise } - A Promise is returned that is resolved when the proxy connection is established, or rejected when an error occurs.
+---
 
-Creates a new proxy connection through the given proxy to the given destination host. This factory function supports callbacks and promises for async flow control.
+### SocksClient.createConnection(options)
 
-**Note:** If a callback function is provided, the promise will always resolve regardless of an error occurring. Please be sure to exclusively use either promises or callbacks when using this factory function.
+* `options` **SocksClientOptions**
+* Returns **Promise\<SocksClientEstablishedEvent\>**
+
+Creates a new proxied connection. Supports `connect`, `bind`, and `associate` commands.
 
 ```typescript
-const options = {
-  proxy: {
-    host: '159.203.75.200', // ipv4, ipv6, or hostname
-    port: 1080,
-    type: 5 // Proxy version (4 or 5)
-  },
+const info = await SocksClient.createConnection({
+  proxy: { host: '159.203.75.200', port: 1080, type: 5 },
+  command: 'connect',
+  destination: { host: '192.30.253.113', port: 80 }
+});
 
-  command: 'connect', // connect, bind, associate
+console.log(info.socket); // <net.Socket>
+```
 
-  destination: {
-    host: '192.30.253.113', // ipv4, ipv6, or hostname
-    port: 80
-  }
+---
+
+### SocksClient.connect(proxy, destination, options?)
+
+* `proxy` **SocksProxy** -- The proxy server.
+* `destination` **SocksRemoteHost** -- The remote host to connect to.
+* `options` **object** (optional) -- Additional options (`timeout`, `signal`, `existingSocket`, `setTcpNoDelay`, `socketOptions`).
+* Returns **Promise\<SocksClientEstablishedEvent\>**
+
+Convenience method equivalent to calling `createConnection` with `command: 'connect'`.
+
+```typescript
+const info = await SocksClient.connect(
+  { host: '159.203.75.200', port: 1080, type: 5 },
+  { host: 'example.com', port: 443 },
+  { timeout: 10000 }
+);
+```
+
+---
+
+### SocksClient.connectFromUrl(proxyUrl, destination, options?)
+
+* `proxyUrl` **string** -- A SOCKS proxy URL (e.g. `'socks5://user:pass@host:port'`).
+* `destination` **SocksRemoteHost** -- The remote host to connect to.
+* `options` **object** (optional) -- Additional options (`timeout`, `signal`, `existingSocket`, `setTcpNoDelay`, `socketOptions`).
+* Returns **Promise\<SocksClientEstablishedEvent\>**
+
+Combines `parseProxyUrl()` and `connect()` in a single call. Useful when proxy configuration comes from a URL string (e.g., environment variables or config files).
+
+```typescript
+const info = await SocksClient.connectFromUrl(
+  'socks5://user:pass@proxy.example.com:1080',
+  { host: 'example.com', port: 443 }
+);
+```
+
+---
+
+### SocksClient.createConnectionChain(options)
+
+* `options` **SocksClientChainOptions**
+* Returns **Promise\<SocksClientEstablishedEvent\>**
+
+Creates a proxied connection through a chain of one or more SOCKS proxies. Only the `connect` command is supported.
+
+```typescript
+interface SocksClientChainOptions {
+  command: 'connect';
+  destination: SocksRemoteHost;
+  proxies: SocksProxy[];        // At least 1 proxy required
+  timeout?: number;             // Per-hop timeout in ms
+  signal?: AbortSignal;
+  randomizeChain?: boolean;     // Shuffle proxy order (default: false)
 }
+```
 
-// Await/Async (uses a Promise)
+---
+
+### SocksClient.testConnection(proxy, destination, options?)
+
+* `proxy` **SocksProxy** -- The proxy server to test.
+* `destination` **SocksRemoteHost** -- A remote host to connect to through the proxy.
+* `options` **object** (optional) -- Additional options (`timeout`, `signal`, etc.).
+* Returns **Promise\<void\>**
+
+Tests whether a proxy is reachable by connecting to a destination through it and immediately destroying the socket. Throws on failure.
+
+```typescript
 try {
-  const info = await SocksClient.createConnection(options);
-  console.log(info);
-  /*
-  {
-    socket: <Socket ...>,  // Raw net.Socket
-  }
-  */
-  / <Socket ...>  (this is a raw net.Socket that is established to the destination host through the given proxy server)
-
+  await SocksClient.testConnection(
+    { host: '127.0.0.1', port: 1080, type: 5 },
+    { host: 'example.com', port: 80 },
+    { timeout: 5000 }
+  );
+  console.log('Proxy is reachable');
 } catch (err) {
-  // Handle error...
-}
-
-// Promise
-SocksClient.createConnection(options)
-.then(info => {
-  console.log(info);
-  /*
-  {
-    socket: <Socket ...>,  // Raw net.Socket
-  }
-  */
-})
-.catch(err => {
-  // Handle error...
-});
-
-// Callback
-SocksClient.createConnection(options, (err, info) => {
-  if (!err) {
-    console.log(info);
-  /*
-  {
-    socket: <Socket ...>,  // Raw net.Socket
-  }
-  */
-  } else {
-    // Handle error...
-  }
-});
-```
-
-### Class Method: SocksClient.createConnectionChain(options[, callback])
-* ```options``` { SocksClientChainOptions } - An object describing a list of SOCKS proxies to use, the command to send and establish, and the destination host to connect to.
-* ```callback``` { Function } - Optional callback function that is called when the proxy connection chain is established, or an error occurs.
-* ```returns``` { Promise } - A Promise is returned that is resolved when the proxy connection chain is established, or rejected when an error occurs.
-
-Creates a new proxy connection chain through a list of at least two SOCKS proxies to the given destination host. This factory method supports callbacks and promises for async flow control.
-
-**Note:** If a callback function is provided, the promise will always resolve regardless of an error occurring. Please be sure to exclusively use either promises or callbacks when using this factory function.
-
-**Note:** At least two proxies must be provided for the chain to be established.
-
-```typescript
-const options = {
-  proxies: [ // The chain order is the order in the proxies array, meaning the last proxy will establish a connection to the destination.
-    {
-      host: '159.203.75.235', // ipv4, ipv6, or hostname
-      port: 1081,
-      type: 5
-    },
-    {
-      host: '104.131.124.203', // ipv4, ipv6, or hostname
-      port: 1081,
-      type: 5
-    }
-  ]
-
-  command: 'connect', // Only connect is supported in chaining mode.
-
-  destination: {
-    host: '192.30.253.113', // ipv4, ipv6, hostname
-    port: 80
-  }
+  console.error('Proxy test failed:', err);
 }
 ```
 
-### Class Method: SocksClient.createUDPFrame(details)
-* ```details``` { SocksUDPFrameDetails } - An object containing the remote host, frame number, and frame data to use when creating a SOCKS UDP frame packet.
-* ```returns``` { Buffer } - A Buffer containing all of the UDP frame data.
+---
 
-Creates a SOCKS UDP frame relay packet that is sent and received via a SOCKS proxy when using the associate command for UDP packet forwarding.
+### SocksClient.parseProxyUrl(url)
 
-**SocksUDPFrameDetails**
+* `url` **string** -- A SOCKS proxy URL.
+* Returns **SocksProxy**
+
+Parses a URL string into a `SocksProxy` object. Supported schemes: `socks://`, `socks4://`, `socks4a://`, `socks5://`, `socks5h://`. Default port is 1080.
 
 ```typescript
-{
-  frameNumber: 0, // The frame number (used for breaking up larger packets)
+const proxy = SocksClient.parseProxyUrl('socks5://user:pass@proxy.example.com:1080');
+// { host: 'proxy.example.com', port: 1080, type: 5, userId: 'user', password: 'pass' }
+```
 
-  remoteHost: { // The remote host to have the proxy send data to, or the remote host that send this data.
-    host: '1.2.3.4',
-    port: 1234
-  },
+---
 
-  data: <Buffer 01 02 03 04...> // A Buffer instance of data to include in the packet (actual data sent to the remote host)
+### SocksClient.proxyFromEnvironment()
+
+* Returns **SocksProxy | null**
+
+Reads a SOCKS proxy URL from environment variables. Checks (in order): `SOCKS_PROXY`, `socks_proxy`, `ALL_PROXY`, `all_proxy`. Returns `null` if no proxy is configured.
+
+```typescript
+const proxy = SocksClient.proxyFromEnvironment();
+if (proxy) {
+  const info = await SocksClient.connect(proxy, { host: 'example.com', port: 443 });
 }
+```
+
+---
+
+### SocksClient.createUDPFrame(details)
+
+* `details` **SocksUDPFrameDetails**
+* Returns **Buffer**
+
+Creates a SOCKS5 UDP frame for use with the `associate` command.
+
+```typescript
 interface SocksUDPFrameDetails {
-  // The frame number of the packet.
-  frameNumber?: number;
-
-  // The remote host.
-  remoteHost: SocksRemoteHost;
-
-  // The packet data.
-  data: Buffer;
+  frameNumber?: number;         // Fragment number (default: 0)
+  remoteHost: SocksRemoteHost;  // Target host and port
+  data: Buffer;                 // Payload data
 }
 ```
 
-### Class Method: SocksClient.parseUDPFrame(data)
-* ```data``` { Buffer } - A Buffer instance containing SOCKS UDP frame data to parse.
-* ```returns``` { SocksUDPFrameDetails } - An object containing the remote host, frame number, and frame data of the SOCKS UDP frame.
+```typescript
+const frame = SocksClient.createUDPFrame({
+  remoteHost: { host: '1.2.3.4', port: 1234 },
+  data: Buffer.from('hello')
+});
+```
+
+---
+
+### SocksClient.parseUDPFrame(data)
+
+* `data` **Buffer** -- Raw UDP frame data.
+* Returns **SocksUDPFrameDetails**
+
+Parses a SOCKS5 UDP frame received from a proxy.
 
 ```typescript
 const frame = SocksClient.parseUDPFrame(data);
-console.log(frame);
-/*
-{
-  frameNumber: 0,
-  remoteHost: {
-    host: '1.2.3.4',
-    port: 1234
-  },
-  data: <Buffer 01 02 03 04 ...>
-}
-*/
+// { frameNumber: 0, remoteHost: { host: '1.2.3.4', port: 1234 }, data: <Buffer ...> }
 ```
 
-Parses a Buffer instance and returns the parsed SocksUDPFrameDetails object.
+---
 
-## Event: 'error'
-* ```err``` { SocksClientError } - An Error object containing an error message and the original SocksClientOptions.
+### Event: 'error'
 
-This event is emitted if an error occurs when trying to establish the proxy connection.
+* `err` **SocksClientError** -- Error with `code`, `options`, and optional `detail` properties.
 
-## Event: 'bound'
-* ```info``` { SocksClientBoundEvent } An object containing a Socket and SocksRemoteHost info.
+Emitted when an unrecoverable error occurs. The underlying socket is destroyed before this event fires.
 
-This event is emitted when using the BIND command on a remote SOCKS proxy server. This event indicates the proxy server is now listening for incoming connections on a specified port.
+### Event: 'bound'
 
-**SocksClientBoundEvent**
+* `info` **SocksClientBoundEvent** -- Contains `socket` (net.Socket), `remoteHost` ({ host, port }), and `[Symbol.dispose]()`.
+
+Emitted when a `bind` command succeeds and the proxy is listening for incoming connections.
+
+### Event: 'established'
+
+* `info` **SocksClientEstablishedEvent** -- Contains `socket` (net.Socket), optional `remoteHost` ({ host, port }), and `[Symbol.dispose]()`.
+
+Emitted when the proxied connection is fully established:
+- **CONNECT**: The TCP connection to the destination is ready.
+- **BIND**: A remote client has connected to the bound port.
+- **ASSOCIATE**: The UDP relay is ready.
+
+### client.connect()
+
+Initiates the connection to the proxy server. Must be called after attaching event listeners.
+
+### client.socksClientOptions
+
+* Returns **SocksClientOptions** -- A copy of the options passed to the constructor.
+
+---
+
+### resolveProxyType(type)
+
+* `type` **SocksProxyType** -- A numeric (`4`, `5`) or string (`'socks'`, `'socks4'`, `'socks4a'`, `'socks5'`, `'socks5h'`) proxy type.
+* Returns **4 | 5**
+
+Utility function that normalizes any `SocksProxyType` value to its numeric form. Useful when working with proxy type values from configuration or user input.
+
 ```typescript
-{
-  socket: net.Socket, // The underlying raw Socket
-  remoteHost: {
-    host: '1.2.3.4', // The remote host that is listening (usually the proxy itself)
-    port: 4444 // The remote port the proxy is listening on for incoming connections (when using BIND).
-  }
-}
+import { resolveProxyType } from 'socks';
+
+resolveProxyType('socks5h'); // 5
+resolveProxyType('socks4a'); // 4
+resolveProxyType(5);         // 5
 ```
 
-## Event: 'established'
-* ```info``` { SocksClientEstablishedEvent } An object containing a Socket and SocksRemoteHost info.
+---
 
-This event is emitted when the following conditions are met:
-1. When using the CONNECT command, and a proxy connection has been established to the remote host.
-2. When using the BIND command, and an incoming connection has been accepted by the proxy and a TCP relay has been established.
-3. When using the ASSOCIATE command, and a UDP relay has been established.
+## Migrating from v2
 
-When using BIND, 'bound' is first emitted to indicate the SOCKS server is waiting for an incoming connection, and provides the remote port the SOCKS server is listening on.
+### Breaking changes
 
-When using ASSOCIATE, 'established' is emitted with the remote UDP port the SOCKS server is accepting UDP frame packets on.
+1. **Callback API removed.** All factory methods (`createConnection`, `createConnectionChain`) are now promise-only. Remove any callback arguments and use `await` or `.then()`.
 
-**SocksClientEstablishedEvent**
-```typescript
-{
-  socket: net.Socket, // The underlying raw Socket
-  remoteHost: {
-    host: '1.2.3.4', // The remote host that is listening (usually the proxy itself)
-    port: 52738 // The remote port the proxy is listening on for incoming connections (when using BIND).
-  }
-}
-```
+   ```typescript
+   // v2 (no longer works)
+   SocksClient.createConnection(options, (err, info) => { ... });
 
-## client.connect()
+   // v3
+   const info = await SocksClient.createConnection(options);
+   ```
 
-Starts connecting to the remote SOCKS proxy server to establish a proxy connection to the destination host.
+2. **Node.js >= 20.0.0 required.** Older versions of Node.js are no longer supported.
 
-## client.socksClientOptions
-* ```returns``` { SocksClientOptions } The options that were passed to the SocksClient.
+3. **camelCase options preferred.** The following options have been renamed. The old snake_case names still work but are deprecated and will be removed in a future major version:
 
-Gets the options that were passed to the SocksClient when it was created.
+   | Deprecated (snake_case) | Preferred (camelCase) |
+   | --- | --- |
+   | `existing_socket` | `existingSocket` |
+   | `set_tcp_nodelay` | `setTcpNoDelay` |
+   | `socket_options` | `socketOptions` |
+   | `custom_auth_method` | `customAuthMethod` |
+   | `custom_auth_request_handler` | `customAuthRequestHandler` |
+   | `custom_auth_response_size` | `customAuthResponseSize` |
+   | `custom_auth_response_handler` | `customAuthResponseHandler` |
 
+4. **Structured errors.** Errors now include a `code` property (string) from `SocksErrorCode`, an optional `detail` object, and credentials are automatically redacted from the `options` property. The error classes are `SocksClientError`, `SocksTimeoutError`, and `SocksAuthenticationError`.
 
-**SocksClientError**
-```typescript
-{ // Subclassed from Error.
-  message: 'An error has occurred',
-  options: {
-    // SocksClientOptions
-  }
-}
-```
+5. **TCP_NODELAY on by default.** The `setTcpNoDelay` option now defaults to `true` for lower-latency handshakes. Set it to `false` to restore the old behavior.
 
-# Further Reading:
+### New features in v3
 
-Please read the SOCKS 5 specifications for more information on how to use BIND and Associate.
-http://www.ietf.org/rfc/rfc1928.txt
+- **`SocksClient.connect(proxy, destination, options?)`** -- Convenience method for CONNECT.
+- **`SocksClient.connectFromUrl(proxyUrl, destination, options?)`** -- Connect using a SOCKS proxy URL string.
+- **`SocksClient.testConnection(proxy, destination, options?)`** -- Test whether a proxy is reachable.
+- **`SocksClient.parseProxyUrl(url)`** -- Parse `socks5://user:pass@host:port` URLs.
+- **`SocksClient.proxyFromEnvironment()`** -- Read proxy config from environment variables.
+- **`resolveProxyType(type)`** -- Normalize proxy type strings to numeric values.
+- **`signal` option** -- Pass an `AbortSignal` to cancel connections.
+- **`Symbol.dispose` support** -- Use `using` for automatic socket cleanup.
+- **`isSocksError(err)` type guard** -- Narrow caught errors safely.
+- **`randomizeChain` option** -- Shuffle proxy order in `createConnectionChain`.
+- **Single-proxy chains** -- `createConnectionChain` now accepts 1 or more proxies.
+- **Chain error hop info** -- Chain errors include `hopIndex`, `hopProxy`, and `hopTotal` in `detail`.
+- **Dual ESM/CJS package** -- Both `import` and `require` work out of the box.
 
-# License
+## Further Reading
+
+- [CHANGELOG](./CHANGELOG.md)
+- [SOCKS5 specification (RFC 1928)](https://www.rfc-editor.org/rfc/rfc1928)
+
+## License
 
 This work is licensed under the [MIT license](http://en.wikipedia.org/wiki/MIT_License).
