@@ -563,10 +563,19 @@ describe('utils', () => {
     const arr = [1, 2, 3, 4, 5, 6];
     const arrCopy = [...arr];
 
-    shuffleArray(arrCopy);
+    // Stub Math.random so the shuffle is deterministic. A real shuffle can
+    // (rarely) produce the original order, which made this test flaky.
+    const originalRandom = Math.random;
+    Math.random = () => 0;
+
+    try {
+      shuffleArray(arrCopy);
+    } finally {
+      Math.random = originalRandom;
+    }
 
     assert.notDeepStrictEqual(arr, arrCopy);
-    assert.deepStrictEqual(arr, arrCopy.sort());
+    assert.deepStrictEqual(arr, [...arrCopy].sort((a, b) => a - b));
   });
 
   it("should convert between int32 and ipv4 string", () => {
