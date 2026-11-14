@@ -314,6 +314,68 @@ describe('Validating SocksProxyOptions', () => {
     }, SocksClientError);
   });
 
+  it('should throw an exception when a SOCKS5 userId exceeds 255 bytes', () => {
+    assert.throws(() => {
+      validateSocksClientOptions({
+        proxy: {...socksProxyValid, userId: 'u'.repeat(256), password: 'p'},
+        command: socksCommandValid,
+        destination: socksRemoteHostValid,
+      });
+    }, SocksClientError);
+  });
+
+  it('should throw an exception when a SOCKS5 password exceeds 255 bytes', () => {
+    assert.throws(() => {
+      validateSocksClientOptions({
+        proxy: {...socksProxyValid, userId: 'u', password: 'p'.repeat(256)},
+        command: socksCommandValid,
+        destination: socksRemoteHostValid,
+      });
+    }, SocksClientError);
+  });
+
+  it('should count SOCKS5 userId and password length in UTF-8 bytes', () => {
+    // 128 two-byte characters = 256 bytes.
+    assert.throws(() => {
+      validateSocksClientOptions({
+        proxy: {...socksProxyValid, userId: 'é'.repeat(128), password: 'p'},
+        command: socksCommandValid,
+        destination: socksRemoteHostValid,
+      });
+    }, SocksClientError);
+    assert.throws(() => {
+      validateSocksClientOptions({
+        proxy: {...socksProxyValid, userId: 'u', password: 'é'.repeat(128)},
+        command: socksCommandValid,
+        destination: socksRemoteHostValid,
+      });
+    }, SocksClientError);
+  });
+
+  it('should accept a SOCKS5 userId and password of 255 bytes', () => {
+    assert.doesNotThrow(() => {
+      validateSocksClientOptions({
+        proxy: {
+          ...socksProxyValid,
+          userId: 'u'.repeat(255),
+          password: 'p'.repeat(255),
+        },
+        command: socksCommandValid,
+        destination: socksRemoteHostValid,
+      });
+    });
+  });
+
+  it('should accept a SOCKS4 userId longer than 255 bytes', () => {
+    assert.doesNotThrow(() => {
+      validateSocksClientOptions({
+        proxy: {...socksProxyValid, type: 4, userId: 'u'.repeat(256)},
+        command: socksCommandValid,
+        destination: socksRemoteHostValid,
+      });
+    });
+  });
+
   it('should throw an exception when given a invalid destination port', () => {
     assert.throws(() => {
       validateSocksClientOptions({
@@ -407,6 +469,20 @@ describe('Validating SocksProxyOptions', () => {
     }, SocksClientError);
   });
 
+  it('should throw an exception when a chained SOCKS5 proxy password exceeds 255 bytes', () => {
+    assert.throws(() => {
+      validateSocksClientChainOptions({
+        command: socksCommandValid,
+        destination: socksRemoteHostValid,
+        timeout: 10000,
+        proxies: [
+          socksProxyValid,
+          {...socksProxyValid, userId: 'u', password: 'p'.repeat(256)},
+        ],
+      });
+    }, SocksClientError);
+  });
+
   it('should throw an exception when given invalid socks proxies (invalid)', () => {
     assert.throws(() => {
       validateSocksClientChainOptions({
@@ -495,6 +571,39 @@ describe('SocksClient', () => {
           return true;
         },
       );
+    });
+  });
+
+  describe('createConnection with SOCKS5 credentials over 255 bytes', () => {
+    it('should reject instead of throwing from the socket data handler', async () => {
+      // A proxy that picks username/password auth (0x02).
+      const server = net.createServer((socket) => {
+        socket.once('data', () => socket.write(Buffer.from([0x05, 0x02])));
+      });
+      await new Promise<void>((resolve) =>
+        server.listen(0, '127.0.0.1', resolve),
+      );
+      const {port} = server.address() as net.AddressInfo;
+
+      try {
+        await assert.rejects(
+          SocksClient.createConnection({
+            destination: {host: 'example.com', port: 80},
+            proxy: {
+              host: '127.0.0.1',
+              port,
+              type: 5,
+              userId: 'u'.repeat(256),
+              password: 'p',
+            },
+            command: 'connect',
+            timeout: 2000,
+          }),
+          (err) => err instanceof SocksClientError,
+        );
+      } finally {
+        server.close();
+      }
     });
   });
 

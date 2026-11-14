@@ -198,7 +198,19 @@ function isValidSocksProxy(proxy: SocksProxy) {
     typeof proxy.port === 'number' &&
     proxy.port >= 0 &&
     proxy.port <= 65535 &&
-    (proxy.type === 4 || proxy.type === 5)
+    (proxy.type === 4 || (proxy.type === 5 && isValidSocks5UserPass(proxy)))
+  );
+}
+
+/**
+ * Validates the SOCKS5 username/password of a SocksProxy. RFC 1929 sends
+ * each one with a 1-byte length, so neither may be longer than 255 bytes.
+ * @param proxy { SocksProxy }
+ */
+function isValidSocks5UserPass(proxy: SocksProxy) {
+  return (
+    Buffer.byteLength(proxy.userId || '') <= 255 &&
+    Buffer.byteLength(proxy.password || '') <= 255
   );
 }
 
