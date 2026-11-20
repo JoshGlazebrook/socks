@@ -758,7 +758,7 @@ class SocksClient extends EventEmitter implements SocksClient {
       buff.writeBuffer(ipToBuffer(this.options.destination.host));
     } else {
       buff.writeUInt8(Socks5HostType.Hostname);
-      buff.writeUInt8(this.options.destination.host.length);
+      buff.writeUInt8(Buffer.byteLength(this.options.destination.host));
       buff.writeString(this.options.destination.host);
     }
     buff.writeUInt16BE(this.options.destination.port);
