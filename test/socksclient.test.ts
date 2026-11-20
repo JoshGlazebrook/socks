@@ -607,6 +607,48 @@ describe('SocksClient', () => {
     });
   });
 
+  describe('createConnection with a non-ASCII SOCKS5 destination hostname', () => {
+    it('should send the hostname length in UTF-8 bytes', async () => {
+      // 'bücher.example' is 14 characters but 15 bytes in UTF-8.
+      const host = 'bücher.example';
+      let request: Buffer | undefined;
+
+      // A proxy that picks no auth (0x00), then records the command request.
+      const server = net.createServer((socket) => {
+        socket.once('data', () => {
+          socket.once('data', (data: Buffer) => {
+            request = data;
+            socket.destroy();
+          });
+          socket.write(Buffer.from([0x05, 0x00]));
+        });
+      });
+      await new Promise<void>((resolve) =>
+        server.listen(0, '127.0.0.1', resolve),
+      );
+      const {port} = server.address() as net.AddressInfo;
+
+      try {
+        await SocksClient.createConnection({
+          destination: {host, port: 443},
+          proxy: {host: '127.0.0.1', port, type: 5},
+          command: 'connect',
+          timeout: 2000,
+        }).catch((): void => undefined);
+      } finally {
+        server.close();
+      }
+
+      assert(request, 'the proxy did not receive a command request');
+      // VER CMD RSV ATYP LEN HOST PORT
+      const hostLength = request[4];
+      assert.strictEqual(hostLength, Buffer.byteLength(host));
+      assert.strictEqual(request.length, 5 + hostLength + 2);
+      assert.strictEqual(request.toString('utf8', 5, 5 + hostLength), host);
+      assert.strictEqual(request.readUInt16BE(5 + hostLength), 443);
+    });
+  });
+
   describe('createConnectionChain', () => {
     it('should call the callback with an error when options validation fails and callback is provided', () => {
       SocksClient.createConnectionChain(
