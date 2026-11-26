@@ -665,6 +665,87 @@ describe('SocksClient', () => {
       );
     });
   });
+
+  describe('bound address 0.0.0.0 with the proxy set by host', () => {
+    // Starts a fake proxy that answers each request with the next reply.
+    async function startProxy(replies: Buffer[]) {
+      const sockets: net.Socket[] = [];
+      const server = net.createServer((socket) => {
+        sockets.push(socket);
+        socket.on('data', () => {
+          const reply = replies.shift();
+          if (reply) {
+            socket.write(reply);
+          }
+        });
+      });
+      await new Promise<void>((resolve) =>
+        server.listen(0, '127.0.0.1', resolve),
+      );
+      const {port} = server.address() as net.AddressInfo;
+      const close = () => {
+        sockets.forEach((socket) => socket.destroy());
+        server.close();
+      };
+      return {port, close};
+    }
+
+    it('should use the proxy host for a SOCKS4 BIND reply', async () => {
+      // VN CD PORT(4321) IP(0.0.0.0)
+      const {port, close} = await startProxy([
+        Buffer.from([0x00, 0x5a, 0x10, 0xe1, 0, 0, 0, 0]),
+      ]);
+
+      const client = new SocksClient({
+        destination: {host: '0.0.0.0', port: 0},
+        proxy: {host: '127.0.0.1', port, type: 4},
+        command: 'bind',
+        timeout: 2000,
+      });
+
+      try {
+        const remoteHost = await new Promise<SocksRemoteHost>(
+          (resolve, reject) => {
+            client.once('bound', (info) => resolve(info.remoteHost));
+            client.once('error', reject);
+            client.connect();
+          },
+        );
+        assert.deepStrictEqual(remoteHost, {host: '127.0.0.1', port: 4321});
+      } finally {
+        close();
+      }
+    });
+
+    it('should use the proxy host for a SOCKS5 ASSOCIATE reply', async () => {
+      const {port, close} = await startProxy([
+        // VER METHOD(no auth)
+        Buffer.from([0x05, 0x00]),
+        // VER REP RSV ATYP(IPv4) ADDR(0.0.0.0) PORT(4321)
+        Buffer.from([0x05, 0x00, 0x00, 0x01, 0, 0, 0, 0, 0x10, 0xe1]),
+      ]);
+
+      const client = new SocksClient({
+        destination: {host: '0.0.0.0', port: 0},
+        proxy: {host: '127.0.0.1', port, type: 5},
+        command: 'associate',
+        timeout: 2000,
+      });
+
+      try {
+        const remoteHost = await new Promise<SocksRemoteHost>(
+          (resolve, reject) => {
+            client.once('established', (info) => resolve(info.remoteHost));
+            client.once('error', reject);
+            client.connect();
+          },
+        );
+        assert.deepStrictEqual(remoteHost, {host: '127.0.0.1', port: 4321});
+      } finally {
+        close();
+      }
+    });
+  });
 });
 
 describe('utils', () => {
