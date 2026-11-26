@@ -556,7 +556,8 @@ class SocksClient extends EventEmitter implements SocksClient {
 
         // If host is 0.0.0.0, set to proxy host.
         if (remoteHost.host === '0.0.0.0') {
-          remoteHost.host = this.options.proxy.ipaddress;
+          remoteHost.host =
+            this.options.proxy.host || this.options.proxy.ipaddress;
         }
         this.setState(SocksClientState.BoundWaitingForConnection);
         this.emit('bound', {remoteHost, socket: this.socket});
@@ -810,7 +811,8 @@ class SocksClient extends EventEmitter implements SocksClient {
 
         // If given host is 0.0.0.0, assume remote proxy ip instead.
         if (remoteHost.host === '0.0.0.0') {
-          remoteHost.host = this.options.proxy.ipaddress;
+          remoteHost.host =
+            this.options.proxy.host || this.options.proxy.ipaddress;
         }
 
         // Hostname
@@ -926,7 +928,8 @@ class SocksClient extends EventEmitter implements SocksClient {
 
         // If given host is 0.0.0.0, assume remote proxy ip instead.
         if (remoteHost.host === '0.0.0.0') {
-          remoteHost.host = this.options.proxy.ipaddress;
+          remoteHost.host =
+            this.options.proxy.host || this.options.proxy.ipaddress;
         }
 
         // Hostname
